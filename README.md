@@ -105,17 +105,31 @@ Then open the local URL shown in terminal (usually `http://localhost:8501`).
 
 ## MVP Screenshots
 
-Store application screenshots in the `images/` folder using these exact names:
+Screenshots are stored in the `images/` folder.
 
-- `images/1.png` (home or mode selection)
-- `images/2.png` (candidate flow)
-- `images/3.png` (company dashboard/ranking view)
-- `images/4.png` (evaluation/result details view)
+### 1) Resume Upload - Backend Developer
 
-![MVP Screenshot 1](images/1.png)
-![MVP Screenshot 2](images/2.png)
-![MVP Screenshot 3](images/3.png)
-![MVP Screenshot 4](images/4.png)
+`images/1.png`
+
+![Resume Upload - Backend Developer](images/1.png)
+
+### 2) Company Dashboard - Backend Developer
+
+`images/2.png`
+
+![Company Dashboard - Backend Developer](images/2.png)
+
+### 3) Ranking View - Junior Data Engineer
+
+`images/3.png`
+
+![Ranking View - Junior Data Engineer](images/3.png)
+
+### 4) Candidate Evaluation Details - Junior Data Engineer
+
+`images/4.png`
+
+![Candidate Evaluation Details - Junior Data Engineer](images/4.png)
 
 ## Usage
 
@@ -184,4 +198,4 @@ This populates `data/results/` with sample candidates for demo/testing.
 
 ## License
 
-No license file is currently defined. Add a `LICENSE` file if distribution is planned.
+This project is licensed under the MIT License. See the `LICENSE` file for details.

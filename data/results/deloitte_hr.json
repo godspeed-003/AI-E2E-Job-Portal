@@ -1,0 +1,85 @@
+[
+  {
+    "candidate_id": "dummy_deloitte_hr_1",
+    "name": "Aarav Patel",
+    "role_id": "deloitte_hr",
+    "ats_score": 80,
+    "llm_score": 25,
+    "max_score": 25,
+    "alignment_score": 0.76,
+    "strengths": [
+      "Empathetic and professional",
+      "Strong recruitment experience"
+    ],
+    "weaknesses": [
+      "Struggles with large datasets",
+      "Less experience with HR software"
+    ],
+    "reason": "Aarav Patel aligns well with the role requirements due to empathetic and professional. However, struggles with large datasets could be a potential risk.",
+    "status": "Shortlisted"
+  },
+  {
+    "candidate_id": "dummy_deloitte_hr_2",
+    "name": "Diya Sharma",
+    "role_id": "deloitte_hr",
+    "ats_score": 83,
+    "llm_score": 17,
+    "max_score": 25,
+    "alignment_score": 0.92,
+    "strengths": [
+      "Empathetic and professional",
+      "Strong recruitment experience"
+    ],
+    "weaknesses": [
+      "Struggles with large datasets",
+      "New to the consulting sector"
+    ],
+    "reason": "Diya Sharma aligns well with the role requirements due to empathetic and professional. However, struggles with large datasets could be a potential risk.",
+    "status": "Shortlisted"
+  },
+  {
+    "candidate_id": "dummy_deloitte_hr_3",
+    "name": "Vihaan Singh",
+    "role_id": "deloitte_hr",
+    "ats_score": 81,
+    "llm_score": 21,
+    "max_score": 25,
+    "alignment_score": 0.75,
+    "strengths": [
+      "Good understanding of employee engagement",
+      "Great at conflict resolution"
+    ],
+    "weaknesses": [
+      "Less experience with HR software",
+      "New to the consulting sector"
+    ],
+    "reason": "Vihaan Singh aligns well with the role requirements due to good understanding of employee engagement. However, less experience with hr software could be a potential risk.",
+    "status": "Shortlisted"
+  },
+  {
+    "candidate_id": "dummy_deloitte_hr_4",
+    "name": "Aditi Rao",
+    "role_id": "deloitte_hr",
+    "ats_score": 33,
+    "llm_score": 0,
+    "max_score": 25,
+    "alignment_score": 0,
+    "strengths": [],
+    "weaknesses": [],
+    "reason": "Candidate failed preliminary ATS screening. LLM evaluation bypassed.",
+    "status": "Rejected"
+  },
+  {
+    "candidate_id": "dummy_deloitte_hr_5",
+    "name": "Arjun Gupta",
+    "role_id": "deloitte_hr",
+    "ats_score": 31,
+    "llm_score": 0,
+    "max_score": 25,
+    "alignment_score": 0,
+    "strengths": [],
+    "weaknesses": [],
+    "reason": "Candidate failed preliminary ATS screening. LLM evaluation bypassed.",
+    "status": "Rejected"
+  }
+]

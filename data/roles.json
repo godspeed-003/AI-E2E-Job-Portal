@@ -1,0 +1,37 @@
+[
+  {
+    "role_id": "amazon_data_engineer",
+    "company_id": "amazon",
+    "title": "Junior Data Engineer",
+    "job_description": "Build scalable data pipelines and support analytics systems.",
+    "requirements": ["Python", "SQL", "ETL", "Pandas", "AWS basics"]
+  },
+  {
+    "role_id": "amazon_backend_dev",
+    "company_id": "amazon",
+    "title": "Backend Developer",
+    "job_description": "Develop scalable backend services and APIs.",
+    "requirements": ["Python", "Java", "APIs", "Databases", "System design"]
+  },
+  {
+    "role_id": "deloitte_hr",
+    "company_id": "deloitte",
+    "title": "HR Associate",
+    "job_description": "Support hiring and employee engagement.",
+    "requirements": ["Communication", "Recruitment", "Conflict resolution"]
+  },
+  {
+    "role_id": "deloitte_marketing",
+    "company_id": "deloitte",
+    "title": "Marketing Executive",
+    "job_description": "Execute campaigns and manage brand presence.",
+    "requirements": ["Content", "SEO", "Campaigns", "Social media"]
+  },
+  {
+    "role_id": "deloitte_operations",
+    "company_id": "deloitte",
+    "title": "Operations Coordinator",
+    "job_description": "Manage internal processes and coordination.",
+    "requirements": ["Coordination", "Reporting", "Attention to detail"]
+  }
+]

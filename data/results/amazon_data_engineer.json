@@ -1,0 +1,110 @@
+[
+  {
+    "candidate_id": "dummy_amazon_data_engineer_1",
+    "name": "Liam Smith",
+    "role_id": "amazon_data_engineer",
+    "ats_score": 80,
+    "llm_score": 19,
+    "max_score": 25,
+    "alignment_score": 0.88,
+    "strengths": [
+      "Excellent problem solving",
+      "Strong Python and SQL skills"
+    ],
+    "weaknesses": [
+      "Communication could be improved",
+      "No Docker experience"
+    ],
+    "reason": "Liam Smith aligns well with the role requirements due to excellent problem solving. However, communication could be improved could be a potential risk.",
+    "status": "Shortlisted"
+  },
+  {
+    "candidate_id": "dummy_amazon_data_engineer_2",
+    "name": "Olivia Johnson",
+    "role_id": "amazon_data_engineer",
+    "ats_score": 83,
+    "llm_score": 24,
+    "max_score": 25,
+    "alignment_score": 0.82,
+    "strengths": [
+      "Strong Python and SQL skills",
+      "Experience with AWS redshift"
+    ],
+    "weaknesses": [
+      "Communication could be improved",
+      "Limited system design experience"
+    ],
+    "reason": "Olivia Johnson aligns well with the role requirements due to strong python and sql skills. However, communication could be improved could be a potential risk.",
+    "status": "Shortlisted"
+  },
+  {
+    "candidate_id": "dummy_amazon_data_engineer_3",
+    "name": "Noah Williams",
+    "role_id": "amazon_data_engineer",
+    "ats_score": 87,
+    "llm_score": 24,
+    "max_score": 25,
+    "alignment_score": 0.84,
+    "strengths": [
+      "Excellent problem solving",
+      "Experience with AWS redshift"
+    ],
+    "weaknesses": [
+      "Needs more experience in streaming data",
+      "Lacks Airflow knowledge"
+    ],
+    "reason": "Noah Williams aligns well with the role requirements due to excellent problem solving. However, needs more experience in streaming data could be a potential risk.",
+    "status": "Shortlisted"
+  },
+  {
+    "candidate_id": "dummy_amazon_data_engineer_4",
+    "name": "Emma Brown",
+    "role_id": "amazon_data_engineer",
+    "ats_score": 36,
+    "llm_score": 0,
+    "max_score": 25,
+    "alignment_score": 0,
+    "strengths": [],
+    "weaknesses": [],
+    "reason": "Candidate failed preliminary ATS screening. LLM evaluation bypassed.",
+    "status": "Rejected"
+  },
+  {
+    "candidate_id": "dummy_amazon_data_engineer_5",
+    "name": "Oliver Jones",
+    "role_id": "amazon_data_engineer",
+    "ats_score": 45,
+    "llm_score": 14,
+    "max_score": 25,
+    "alignment_score": 0.59,
+    "strengths": [
+      "Strong Python and SQL skills",
+      "Built scalable ETL pipelines"
+    ],
+    "weaknesses": [
+      "Lacks Airflow knowledge",
+      "Needs more experience in streaming data"
+    ],
+    "reason": "Oliver Jones aligns well with the role requirements due to strong python and sql skills. However, lacks airflow knowledge could be a potential risk.",
+    "status": "Under Review"
+  },
+  {
+    "candidate_id": "resume_409ccf3f",
+    "name": "Vedant Korade",
+    "role_id": "amazon_data_engineer",
+    "ats_score": 80,
+    "llm_score": 16,
+    "max_score": 25,
+    "alignment_score": 0.64,
+    "strengths": [
+      "Strong projects showcasing data pipeline and analytics skills",
+      "Good communication skills demonstrated through resume"
+    ],
+    "weaknesses": [
+      "Limited experience in a professional setting",
+      "Lack of clear ownership or depth in projects"
+    ],
+    "reason": "Candidate has relevant technical skills, but lacks significant professional experience and depth in projects.",
+    "status": "Shortlisted"
+  }
+]

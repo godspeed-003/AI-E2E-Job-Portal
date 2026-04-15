@@ -1,0 +1,91 @@
+[
+  {
+    "candidate_id": "dummy_deloitte_operations_1",
+    "name": "Rohan Mehta",
+    "role_id": "deloitte_operations",
+    "ats_score": 92,
+    "llm_score": 21,
+    "max_score": 25,
+    "alignment_score": 0.88,
+    "strengths": [
+      "Good team coordinator",
+      "Reliable reporting"
+    ],
+    "weaknesses": [
+      "Needs more leadership experience",
+      "Limited budget management"
+    ],
+    "reason": "Rohan Mehta aligns well with the role requirements due to good team coordinator. However, needs more leadership experience could be a potential risk.",
+    "status": "Shortlisted"
+  },
+  {
+    "candidate_id": "dummy_deloitte_operations_2",
+    "name": "Neha Kapoor",
+    "role_id": "deloitte_operations",
+    "ats_score": 92,
+    "llm_score": 22,
+    "max_score": 25,
+    "alignment_score": 0.84,
+    "strengths": [
+      "Detail-oriented",
+      "Reliable reporting"
+    ],
+    "weaknesses": [
+      "Limited budget management",
+      "Sometimes struggles with ambiguity"
+    ],
+    "reason": "Neha Kapoor aligns well with the role requirements due to detail-oriented. However, limited budget management could be a potential risk.",
+    "status": "Shortlisted"
+  },
+  {
+    "candidate_id": "dummy_deloitte_operations_3",
+    "name": "Yash Ahuja",
+    "role_id": "deloitte_operations",
+    "ats_score": 83,
+    "llm_score": 20,
+    "max_score": 25,
+    "alignment_score": 0.9,
+    "strengths": [
+      "Reliable reporting",
+      "Great at process optimization"
+    ],
+    "weaknesses": [
+      "Limited budget management",
+      "Advanced Excel skills lacking"
+    ],
+    "reason": "Yash Ahuja aligns well with the role requirements due to reliable reporting. However, limited budget management could be a potential risk.",
+    "status": "Shortlisted"
+  },
+  {
+    "candidate_id": "dummy_deloitte_operations_4",
+    "name": "Priya Das",
+    "role_id": "deloitte_operations",
+    "ats_score": 32,
+    "llm_score": 0,
+    "max_score": 25,
+    "alignment_score": 0,
+    "strengths": [],
+    "weaknesses": [],
+    "reason": "Candidate failed preliminary ATS screening. LLM evaluation bypassed.",
+    "status": "Rejected"
+  },
+  {
+    "candidate_id": "dummy_deloitte_operations_5",
+    "name": "Kabir Nair",
+    "role_id": "deloitte_operations",
+    "ats_score": 45,
+    "llm_score": 5,
+    "max_score": 25,
+    "alignment_score": 0.41,
+    "strengths": [
+      "Detail-oriented",
+      "Strong organizational skills"
+    ],
+    "weaknesses": [
+      "Slower in fast-paced tech shifts",
+      "Sometimes struggles with ambiguity"
+    ],
+    "reason": "Kabir Nair aligns well with the role requirements due to detail-oriented. However, slower in fast-paced tech shifts could be a potential risk.",
+    "status": "Under Review"
+  }
+]

@@ -1,0 +1,40 @@
+[
+  {
+    "company_id": "amazon",
+    "name": "Amazon",
+    "type": "Tech",
+    "culture": [
+      "Customer Obsession",
+      "Ownership",
+      "Bias for Action",
+      "Dive Deep",
+      "Deliver Results"
+    ],
+    "values": [
+      "Leaders are owners",
+      "Think big",
+      "Data-driven decisions",
+      "High standards",
+      "Frugality"
+    ]
+  },
+  {
+    "company_id": "deloitte",
+    "name": "Deloitte",
+    "type": "Non-Tech",
+    "culture": [
+      "Integrity",
+      "Collaboration",
+      "Professional excellence",
+      "Inclusion",
+      "Client commitment"
+    ],
+    "values": [
+      "Act with integrity",
+      "Build trust",
+      "Respect others",
+      "Deliver quality",
+      "Make impact"
+    ]
+  }
+]

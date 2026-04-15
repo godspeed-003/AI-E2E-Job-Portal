@@ -1,0 +1,85 @@
+[
+  {
+    "candidate_id": "dummy_amazon_backend_dev_1",
+    "name": "James Garcia",
+    "role_id": "amazon_backend_dev",
+    "ats_score": 92,
+    "llm_score": 19,
+    "max_score": 25,
+    "alignment_score": 0.78,
+    "strengths": [
+      "Solid database optimization skills",
+      "Experience building REST APIs"
+    ],
+    "weaknesses": [
+      "Needs more caching expertise",
+      "Not familiar with Kubernetes"
+    ],
+    "reason": "James Garcia aligns well with the role requirements due to solid database optimization skills. However, needs more caching expertise could be a potential risk.",
+    "status": "Shortlisted"
+  },
+  {
+    "candidate_id": "dummy_amazon_backend_dev_2",
+    "name": "Isabella Martinez",
+    "role_id": "amazon_backend_dev",
+    "ats_score": 79,
+    "llm_score": 20,
+    "max_score": 25,
+    "alignment_score": 0.75,
+    "strengths": [
+      "Experience building REST APIs",
+      "Good at system design"
+    ],
+    "weaknesses": [
+      "Lacks Go experience",
+      "Not familiar with Kubernetes"
+    ],
+    "reason": "Isabella Martinez aligns well with the role requirements due to experience building rest apis. However, lacks go experience could be a potential risk.",
+    "status": "Shortlisted"
+  },
+  {
+    "candidate_id": "dummy_amazon_backend_dev_3",
+    "name": "William Rodriguez",
+    "role_id": "amazon_backend_dev",
+    "ats_score": 89,
+    "llm_score": 17,
+    "max_score": 25,
+    "alignment_score": 0.81,
+    "strengths": [
+      "Deep knowledge of Java and Spring",
+      "Good at system design"
+    ],
+    "weaknesses": [
+      "Not familiar with Kubernetes",
+      "Lacks Go experience"
+    ],
+    "reason": "William Rodriguez aligns well with the role requirements due to deep knowledge of java and spring. However, not familiar with kubernetes could be a potential risk.",
+    "status": "Shortlisted"
+  },
+  {
+    "candidate_id": "dummy_amazon_backend_dev_4",
+    "name": "Sophia Hernandez",
+    "role_id": "amazon_backend_dev",
+    "ats_score": 36,
+    "llm_score": 0,
+    "max_score": 25,
+    "alignment_score": 0,
+    "strengths": [],
+    "weaknesses": [],
+    "reason": "Candidate failed preliminary ATS screening. LLM evaluation bypassed.",
+    "status": "Rejected"
+  },
+  {
+    "candidate_id": "dummy_amazon_backend_dev_5",
+    "name": "Benjamin Lopez",
+    "role_id": "amazon_backend_dev",
+    "ats_score": 35,
+    "llm_score": 0,
+    "max_score": 25,
+    "alignment_score": 0,
+    "strengths": [],
+    "weaknesses": [],
+    "reason": "Candidate failed preliminary ATS screening. LLM evaluation bypassed.",
+    "status": "Rejected"
+  }
+]

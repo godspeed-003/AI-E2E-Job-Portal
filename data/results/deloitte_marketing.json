@@ -1,0 +1,91 @@
+[
+  {
+    "candidate_id": "dummy_deloitte_marketing_1",
+    "name": "Riya Desai",
+    "role_id": "deloitte_marketing",
+    "ats_score": 80,
+    "llm_score": 22,
+    "max_score": 25,
+    "alignment_score": 0.85,
+    "strengths": [
+      "Creative content creator",
+      "Strong social media presence"
+    ],
+    "weaknesses": [
+      "Event management is weak",
+      "Not familiar with HubSpot"
+    ],
+    "reason": "Riya Desai aligns well with the role requirements due to creative content creator. However, event management is weak could be a potential risk.",
+    "status": "Shortlisted"
+  },
+  {
+    "candidate_id": "dummy_deloitte_marketing_2",
+    "name": "Krishna Verma",
+    "role_id": "deloitte_marketing",
+    "ats_score": 89,
+    "llm_score": 22,
+    "max_score": 25,
+    "alignment_score": 0.76,
+    "strengths": [
+      "Good at metric analysis",
+      "Experience with successful ad campaigns"
+    ],
+    "weaknesses": [
+      "New to video marketing",
+      "Event management is weak"
+    ],
+    "reason": "Krishna Verma aligns well with the role requirements due to good at metric analysis. However, new to video marketing could be a potential risk.",
+    "status": "Shortlisted"
+  },
+  {
+    "candidate_id": "dummy_deloitte_marketing_3",
+    "name": "Ananya Reddy",
+    "role_id": "deloitte_marketing",
+    "ats_score": 91,
+    "llm_score": 19,
+    "max_score": 25,
+    "alignment_score": 0.89,
+    "strengths": [
+      "SEO expert",
+      "Good at metric analysis"
+    ],
+    "weaknesses": [
+      "Event management is weak",
+      "Needs more copywriting practice"
+    ],
+    "reason": "Ananya Reddy aligns well with the role requirements due to seo expert. However, event management is weak could be a potential risk.",
+    "status": "Shortlisted"
+  },
+  {
+    "candidate_id": "dummy_deloitte_marketing_4",
+    "name": "Ishaan Joshi",
+    "role_id": "deloitte_marketing",
+    "ats_score": 32,
+    "llm_score": 0,
+    "max_score": 25,
+    "alignment_score": 0,
+    "strengths": [],
+    "weaknesses": [],
+    "reason": "Candidate failed preliminary ATS screening. LLM evaluation bypassed.",
+    "status": "Rejected"
+  },
+  {
+    "candidate_id": "dummy_deloitte_marketing_5",
+    "name": "Kavya Iyer",
+    "role_id": "deloitte_marketing",
+    "ats_score": 43,
+    "llm_score": 7,
+    "max_score": 25,
+    "alignment_score": 0.37,
+    "strengths": [
+      "Good at metric analysis",
+      "Creative content creator"
+    ],
+    "weaknesses": [
+      "Not familiar with HubSpot",
+      "Event management is weak"
+    ],
+    "reason": "Kavya Iyer aligns well with the role requirements due to good at metric analysis. However, not familiar with hubspot could be a potential risk.",
+    "status": "Under Review"
+  }
+]

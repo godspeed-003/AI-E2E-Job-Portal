@@ -47,7 +47,8 @@ The pipeline is:
 ├── images/
 │   ├── 1.png
 │   ├── 2.png
-│   └── 3.png
+│   ├── 3.png
+│   └── 4.png
 └── data/
     ├── companies.json
     ├── roles.json
@@ -109,10 +110,12 @@ Store application screenshots in the `images/` folder using these exact names:
 - `images/1.png` (home or mode selection)
 - `images/2.png` (candidate flow)
 - `images/3.png` (company dashboard/ranking view)
+- `images/4.png` (evaluation/result details view)
 
 ![MVP Screenshot 1](images/1.png)
 ![MVP Screenshot 2](images/2.png)
 ![MVP Screenshot 3](images/3.png)
+![MVP Screenshot 4](images/4.png)
 
 ## Usage
 

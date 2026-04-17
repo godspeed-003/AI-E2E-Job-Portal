@@ -44,11 +44,6 @@ The pipeline is:
 │   ├── evaluator.py
 │   ├── ranker.py
 │   └── storage.py
-├── images/
-│   ├── 1.png
-│   ├── 2.png
-│   ├── 3.png
-│   └── 4.png
 └── data/
     ├── companies.json
     ├── roles.json
@@ -102,34 +97,6 @@ streamlit run app.py
 ```
 
 Then open the local URL shown in terminal (usually `http://localhost:8501`).
-
-## MVP Screenshots
-
-Screenshots are stored in the `images/` folder.
-
-### 1) Resume Upload - Backend Developer
-
-`images/1.png`
-
-![Resume Upload - Backend Developer](images/1.png)
-
-### 2) Company Dashboard - Backend Developer
-
-`images/2.png`
-
-![Company Dashboard - Backend Developer](images/2.png)
-
-### 3) Ranking View - Junior Data Engineer
-
-`images/3.png`
-
-![Ranking View - Junior Data Engineer](images/3.png)
-
-### 4) Candidate Evaluation Details - Junior Data Engineer
-
-`images/4.png`
-
-![Candidate Evaluation Details - Junior Data Engineer](images/4.png)
 
 ## Usage
 
@@ -188,6 +155,33 @@ This populates `data/results/` with sample candidates for demo/testing.
 - **PDF extraction empty**: test with another PDF (some scanned PDFs require OCR)
 - **No candidates in Company view**: submit candidates first or run `generate_dummies.py`
 
+## Evaluation Metrics & Graphs
+
+Visual analytics generated from the candidate pipeline are stored in `results/metrics/`. Below are the key performance and analytical indicators automatically tracked by the system:
+
+### 1. Resume Screening Metrics
+![Match Score Distribution](results/metrics/A_Match_Score_Distribution.png)
+![Skill Match Ratio](results/metrics/B_Skill_Match_Ratio.png)
+![Processing Time vs Size](results/metrics/C_Processing_Time.png)
+
+### 2. LLM Evaluation Metrics
+![Answer Scores Boxplot](results/metrics/D_Answer_Scores_Boxplot.png)
+![Consistency Score (0 Std Dev at Temp=0)](results/metrics/E_Consistency_Score.png)
+![Prompt Sensitivity](results/metrics/F_Prompt_Sensitivity.png)
+
+### 3. System-Level Ranking Quality
+![Shortlist Rate](results/metrics/G_Shortlist_Rate.png)
+![Score Gap Analysis](results/metrics/H_Score_Gap.png)
+
+### 4. AI vs Human Alignment
+![Human vs AI Correlation](results/metrics/I_Human_vs_AI.png)
+
+### 5. Advanced Pipeline Analytics
+![End To End Time Distribution](results/metrics/J_End_To_End_Time.png)
+![Pipeline Safety & Failures](results/metrics/K_Pipeline_Failures.png)
+![ATS vs LLM Correlation](results/metrics/L_ATS_vs_LLM_Correlation.png)
+![Feedback Detail Index](results/metrics/M_Feedback_Depth.png)
+
 ## Roadmap
 
 - Semantic ATS scoring (embeddings-based matching)
@@ -196,6 +190,78 @@ This populates `data/results/` with sample candidates for demo/testing.
 - Authentication and role-based access for company users
 - Automated tests and CI pipeline
 
+## 🔮 Future Scope of the Project
+
+### 1. Scalability & Production Deployment
+Right now the system is a single-user, local, JSON-based prototype.
+Future improvements:
+- Replace JSON storage with PostgreSQL / MongoDB
+- Deploy on AWS / GCP (Docker + Kubernetes)
+- Convert Streamlit app into full-stack web app (React + FastAPI)
+- Handle thousands of resumes simultaneously
+
+**Goal:** Making the system scalable and cloud-deployable for enterprise use.
+
+### 2. Advanced LLM Integration
+Currently using Ollama + Llama 3.1 locally, which is good but limited.
+Future upgrades path (Local &rarr; API-based &rarr; Fine-tuned internal model):
+- Use fine-tuned LLMs for recruitment-specific evaluation
+- Add RAG (Retrieval-Augmented Generation) for job-specific context and company policies
+- Multi-model evaluation (compare outputs for reliability)
+
+### 3. Smarter Resume Understanding
+Currently using rule-based + basic NLP parsing.
+Future:
+- Use NER models (SpaCy / Transformers) for skill extraction and experience classification
+- Semantic matching using SBERT / embeddings instead of keyword matching
+- Detect fake experience and skill inflation
+
+### 4. AI Interview System (Major Expansion)
+Future upgrades focusing on real-time capabilities (e.g. leveraging LiveKit):
+- Real-time Speech-to-text (Whisper) and emotion detection (tone, hesitation)
+- Dynamic questioning: Next question depends on previous answer
+- Behavioral analysis: Confidence scoring and communication clarity
+
+### 5. Advanced Proctoring System
+For future advanced proctoring and monitoring setup:
+- Eye tracking (attention detection)
+- Multi-face detection (cheating)
+- Voice anomaly detection
+- Tab-switch + window tracking
+- Suspicious behavior scoring
+*(Note: Full-proof proctoring is extremely difficult; the aim is for probabilistic detection)*
+
+### 6. Bias Reduction & Fairness
+A high-value research extension to ensure fairness:
+- Remove bias based on factors like Name, Gender, College
+- Explainable AI: Transparency on why a candidate was rejected/selected
+- Add Fairness metrics and Transparency reports
+
+### 7. Explainable AI Dashboard
+Expanding from simple scores to full reasoning:
+- *Candidate selected because:* 
+  Skill match: 82% | Experience relevance: High | Interview score: 7.5/10
+
+### 8. Integration with Real Hiring Systems
+Future integrations directly with:
+- ATS (Applicant Tracking Systems)
+- LinkedIn / job portals
+- HR dashboards
+
+### 9. Autonomous Hiring Assistant (Long-Term Vision)
+The end goal of a fully automated AI recruiter that:
+- Screens resumes
+- Conducts interviews
+- Evaluates candidates
+- Recommends hiring decisions (with human-in-the-loop approval)
+
+### 10. Research-Level Extensions
+For potential paper-level work extensions:
+- Multi-modal AI (text + video + audio)
+- Confidence calibration of LLM decisions
+- Hallucination reduction in evaluation
+- Comparative study: Human vs AI recruiter decisions
+
 ## License
 
-This project is licensed under the MIT License. See the `LICENSE` file for details.
+No license file is currently defined. Add a `LICENSE` file if distribution is planned.

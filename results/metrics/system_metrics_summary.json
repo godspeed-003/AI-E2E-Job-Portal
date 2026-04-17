@@ -1,0 +1,15 @@
+{
+    "avg_match_score": 0.5659259259259259,
+    "median_match_score": 0.76,
+    "avg_processing_time_sec": 2.5454722990411227,
+    "avg_consistency_std": 0.0,
+    "total_candidates": 27,
+    "shortlisted": 17,
+    "shortlist_rate": 0.6296296296296297,
+    "avg_top_gap": 0.05800000000000001,
+    "human_ai_mae": 0.4237077818842903,
+    "human_ai_correlation": 0.9897270711602314,
+    "avg_total_pipeline_time": 6.31225675458333,
+    "error_rate_overall": 0.0,
+    "ats_llm_score_correlation": 0.744141338321292
+}

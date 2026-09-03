@@ -106,5 +106,43 @@
     ],
     "reason": "Candidate has relevant technical skills, but lacks significant professional experience and depth in projects.",
     "status": "Shortlisted"
+  },
+  {
+    "candidate_id": "resume_aa9c86dd",
+    "name": "Abhijit Mulik",
+    "role_id": "amazon_data_engineer",
+    "ats_score": 40,
+    "llm_score": 16,
+    "max_score": 25,
+    "alignment_score": 0.64,
+    "strengths": [
+      "Strong project experience with ML and data analysis",
+      "Good communication skills"
+    ],
+    "weaknesses": [
+      "Limited direct experience in Python, SQL, ETL, Pandas, AWS basics",
+      "Lack of clear ownership or leadership roles"
+    ],
+    "reason": "Abhijit has a strong background in programming and project management, but may require additional training to meet the specific requirements of the role. His communication skills are good, but he may need to work on demonstrating more ownership and leadership.",
+    "status": "Shortlisted"
+  },
+  {
+    "candidate_id": "resume_6a7751c2",
+    "name": "Vedant Korade",
+    "role_id": "amazon_data_engineer",
+    "ats_score": 40,
+    "llm_score": 16,
+    "max_score": 25,
+    "alignment_score": 0.64,
+    "strengths": [
+      "Strong technical skills in Python, SQL, and AWS",
+      "Impressive project portfolio demonstrating AI expertise"
+    ],
+    "weaknesses": [
+      "Limited experience in ETL and Pandas",
+      "Lack of clear ownership or leadership roles"
+    ],
+    "reason": "Vedant has a solid foundation in AI and technical skills, but may require additional training or experience to meet the company's requirements. His project portfolio showcases his expertise, but he lacks direct experience in key areas like ETL and Pandas.",
+    "status": "Shortlisted"
   }
 ]

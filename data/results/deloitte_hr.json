@@ -16,7 +16,59 @@
       "Less experience with HR software"
     ],
     "reason": "Aarav Patel aligns well with the role requirements due to empathetic and professional. However, struggles with large datasets could be a potential risk.",
-    "status": "Shortlisted"
+    "status": "Shortlisted",
+    "interview_transcript": [
+      {
+        "q_num": 1,
+        "question": "Can you walk me through a time when you had to analyze and draw meaningful insights from a complex dataset, and how did you ensure that your findings were accurate and actionable?",
+        "answer": "An analysis of 100 hospitals revealed a uniform finding of understaffing by benchmarking patient-to-nurse ratios against standard regional guidelines, cross-validating overtime hours, and confirming the metrics with department heads to ensure the operational insights were both precise and ready for executive action.",
+        "flagged": false
+      },
+      {
+        "q_num": 2,
+        "question": "Can you elaborate on what specifically was the outcome of this analysis in terms of changes made to staffing levels at these hospitals, and were there any notable improvements in patient care or operational efficiency as a result?",
+        "answer": "I don't remember ",
+        "flagged": false
+      },
+      {
+        "q_num": 3,
+        "question": "Can you provide more specifics about what changes were actually implemented at these hospitals, such as the number of nursing staff added or the reduction in overtime hours, and how those changes impacted patient satisfaction or operational metrics?",
+        "answer": "they added 100 more intern nurses and 10 practicing doctors to help at peak times which helped easen up worries of doctors by 17%",
+        "flagged": false
+      },
+      {
+        "q_num": 4,
+        "question": "What were some of the operational challenges you encountered in implementing these staffing changes, and how did you measure their effectiveness in terms of reducing overtime hours and improving patient satisfaction?",
+        "answer": "a big challenge was finding out which person will really do their job no matter how scared they are of the situation to save a person's life and I measured it based on their internal drive to help people and kindness. This improved patient mood by 6%.\n",
+        "flagged": false
+      },
+      {
+        "q_num": 5,
+        "question": "How did you ensure that the additional nursing staff and doctors were properly integrated into existing workflows and that their presence did not disrupt other operational processes within the hospitals?",
+        "answer": "I only assigned the additional nursing staff to doctors in peak hours and also made sure that their assigned work was non invasive and let doctors focus on the important work while they did all the menial tasks. They wre given high volumes of task which can be done independently without disturbing overworked doctors. ",
+        "flagged": false
+      }
+    ],
+    "interview_evaluation": {
+      "criteria": {
+        "technical_depth": 2,
+        "problem_solving": 3,
+        "communication": 1,
+        "culture_fit": 4,
+        "practical_impact": 2
+      },
+      "total_score": 12,
+      "strengths": [
+        "Demonstrated ability to analyze complex data and draw meaningful insights",
+        "Showed understanding of operational challenges in healthcare settings"
+      ],
+      "weaknesses": [
+        "Lack of specificity about technical tools and implementation (technical_depth)",
+        "Unclear decision-making process under constraints (problem_solving)",
+        "Poor communication skills, with long and rambling answers (communication)"
+      ],
+      "summary": "The candidate demonstrated some strengths in analyzing complex data and understanding operational challenges. However, they struggled with providing specific technical details, clear decision-making processes, and concise communication."
+    }
   },
   {
     "candidate_id": "dummy_deloitte_hr_2",

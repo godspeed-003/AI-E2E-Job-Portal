@@ -6,9 +6,11 @@ import uuid
 from modules.parser import extract_text_from_pdf
 from modules.cleaner import clean_text
 from modules.ats import compute_ats_score
-from modules.evaluator import evaluate_resume
-from modules.storage import save_candidate_result, load_results_for_role
+from modules.evaluator import evaluate_resume, evaluate_interview
+from modules.storage import save_candidate_result, load_results_for_role, get_candidate_by_id, save_candidate_interview
 from modules.ranker import rank_candidates
+from modules.interviewer import generate_question
+from modules.guardrails import check_guardrails
 
 st.set_page_config(page_title="AI Resume Screener", layout="wide")
 
@@ -33,7 +35,7 @@ companies, roles = load_data()
 
 st.title("AI Resume Screening System (MVP)")
 
-mode = st.radio("Select View Mode", ["Candidate", "Company"], horizontal=True)
+mode = st.radio("Select View Mode", ["Candidate", "Company", "Interview"], horizontal=True)
 
 if mode == "Candidate":
     st.header("Upload Resume")
@@ -128,3 +130,95 @@ elif mode == "Company":
                 for w in res.get("weaknesses", []):
                     st.write(f"- {w}")
                 st.write(f"**Reasoning**: {res.get('reason', '')}")
+                
+                if "interview_evaluation" in res:
+                    st.markdown("---")
+                    st.write("### AI Interview Review")
+                    st.write(f"**Total Interview Score**: {res['interview_evaluation'].get('total_score', 0)}/25")
+                    
+                    st.write("**Interview Strengths**:")
+                    for s in res['interview_evaluation'].get("strengths", []):
+                        st.write(f"- {s}")
+                    
+                    st.write("**Interview Weaknesses**:")
+                    for w in res['interview_evaluation'].get("weaknesses", []):
+                        st.write(f"- {w}")
+                        
+                    st.write(f"**Summary**: {res['interview_evaluation'].get('summary', '')}")
+                    
+                    if st.checkbox("View Interview Transcript (Q&A)", key=f"transcript_{res.get('candidate_id', idx)}"):
+                        for t in res.get("interview_transcript", []):
+                            st.write(f"**Q:** {t['question']}")
+                            st.write(f"**A:** {t['answer']}")
+                            st.markdown("---")
+
+elif mode == "Interview":
+    st.header("Candidate Interview Portal")
+    
+    if "authenticated_candidate" not in st.session_state:
+        st.session_state.authenticated_candidate = None
+    if "transcript" not in st.session_state:
+        st.session_state.transcript = []
+    if "current_q_index" not in st.session_state:
+        st.session_state.current_q_index = 0
+    if "current_question" not in st.session_state:
+        st.session_state.current_question = None
+        
+    if not st.session_state.authenticated_candidate:
+        candidate_id = st.text_input("Enter Candidate ID (e.g., dummy_amazon_backend_dev_1)")
+        if st.button("Login"):
+            candidate = get_candidate_by_id(candidate_id)
+            if candidate and candidate.get("status") == "Shortlisted":
+                st.session_state.authenticated_candidate = candidate
+                st.rerun()
+            else:
+                st.error("Invalid Candidate ID or Candidate is not Shortlisted.")
+    else:
+        candidate = st.session_state.authenticated_candidate
+        st.write(f"Welcome, {candidate['name']}!")
+        
+        if "interview_evaluation" in candidate:
+            st.info("You have already completed the interview.")
+            with st.expander("View Transcript"):
+                for t in candidate.get("interview_transcript", []):
+                    st.write(f"**Q:** {t['question']}")
+                    st.write(f"**A:** {t['answer']}")
+        elif st.session_state.current_q_index >= 5:
+            st.success("Interview completed! Thank you.")
+            if st.button("Finish & Evaluate"):
+                with st.spinner("Evaluating interview..."):
+                    evaluation = evaluate_interview(st.session_state.transcript)
+                    save_candidate_interview(candidate['candidate_id'], st.session_state.transcript, evaluation)
+                    st.session_state.authenticated_candidate = get_candidate_by_id(candidate['candidate_id'])
+                st.rerun()
+        else:
+            turn = st.session_state.current_q_index + 1
+            st.subheader(f"Question {turn} of 5")
+            
+            if not st.session_state.current_question:
+                role_info = next((r for r in roles if r["role_id"] == candidate["role_id"]), {})
+                with st.spinner("Generating question..."):
+                    st.session_state.current_question = generate_question(candidate, role_info, st.session_state.transcript)
+            
+            st.write(f"**Q:** {st.session_state.current_question}")
+            
+            answer = st.text_area("Your Answer:", key=f"ans_{turn}")
+            
+            if st.button("Submit Answer"):
+                if not answer.strip():
+                    st.warning("Please provide an answer.")
+                else:
+                    with st.spinner("Checking answer..."):
+                        guard_result = check_guardrails(answer)
+                        if not guard_result["safe"]:
+                            st.error(f"Warning: {guard_result['reason']}. Please provide a relevant and detailed answer.")
+                        else:
+                            st.session_state.transcript.append({
+                                "q_num": turn,
+                                "question": st.session_state.current_question,
+                                "answer": answer,
+                                "flagged": False
+                            })
+                            st.session_state.current_q_index += 1
+                            st.session_state.current_question = None
+                            st.rerun()

@@ -16,7 +16,59 @@
       "Not familiar with Kubernetes"
     ],
     "reason": "James Garcia aligns well with the role requirements due to solid database optimization skills. However, needs more caching expertise could be a potential risk.",
-    "status": "Shortlisted"
+    "status": "Shortlisted",
+    "interview_transcript": [
+      {
+        "q_num": 1,
+        "question": "\"Can you describe a scenario where you implemented caching to improve performance in a previous project, and what strategies you employed to choose the right cache solution for that particular use case?\"",
+        "answer": "In a high-traffic e-commerce product catalog service, database CPU utilization spiked to 90% during flash sales due to repetitive read queries for static item details. Implementing a distributed Redis cache layer reduced database load by 70% and cut API response latency from 250ms to 25ms.",
+        "flagged": false
+      },
+      {
+        "q_num": 2,
+        "question": "\"Can you walk me through the process of implementing the Redis cache layer, specifically how did you handle cache expiration and invalidation, and what tools or strategies did you use to monitor its performance and ensure it remained effective over time?\"",
+        "answer": "Interceptor Middleware: Created a generic decorator pattern for repository methods to intercept read calls.Key Namespacing: Enforced a strict naming convention: prod:cat:<category_id>:id:<product_id>. This structured keys logically for targeted purging.Data Serialization: Profiling revealed that serializing complex nested JSON objects consumed high CPU. We switched from standard JSON strings to compressed binary payloads using MessagePack, saving 30% memory footprint and reducing serialization latency.",
+        "flagged": false
+      },
+      {
+        "q_num": 3,
+        "question": "Here's a follow-up question:\n\n\"James, you mentioned that implementing the Redis cache layer reduced database load by 70% and cut API response latency from 250ms to 25ms. Can you provide more details on how you measured these improvements, specifically what tools or metrics you used to track database load before and after the implementation?\"",
+        "answer": "To measure these improvements accurately without introducing observer overhead, we relied on a combination of database-native diagnostics, application performance monitoring (APM) tools, and synthetic load testing. We established a baseline during a simulated load test, replicated the exact traffic profile post-implementation, and compared the infrastructure metrics.",
+        "flagged": false
+      },
+      {
+        "q_num": 4,
+        "question": "\"Can you elaborate on what specific database-native diagnostics tools you used to measure CPU utilization before implementing the Redis cache layer, and were there any instances where these measurements conflicted with your APM tool data?\"",
+        "answer": "pg_stat_statements (Extension): This was our primary diagnostic engine. It records query execution statistics for all running statements. We queried this view to track total_exec_time, calls, and rows. By sorting queries by total_exec_time, we identified the exact nested SELECT queries on our catalog tables that were driving the CPU spikes.pg_stat_activity (System View): We used this to get a real-time snapshot of the engine. It allowed us to monitor active vs. idle connections and see exactly which queries were running when CPU utilization peaked. We coupled this with a cron script that logged queries with a state of active that had been running for longer than 100ms.\n\n",
+        "flagged": false
+      },
+      {
+        "q_num": 5,
+        "question": "\"Can you provide more insight into how you handled the cron script logging queries with a state of active that had been running for longer than 100ms? Did this have any impact on your database performance, and were there any instances where false positives led to unnecessary cache invalidation or other issues?\"",
+        "answer": " The \"Ghost Latency\" Discrepancy (Connection Pool Starvation)The Conflict: Datadog reported that database query spans for fetching products were taking upwards of 400ms. However, PostgreSQL\u2019s pg_stat_statements insisted that the actual execution time for those exact queries averaged only 30ms.The Cause: The issue was connection pool queuing at the application layer. The microservice's database connection pool was entirely exhausted. Datadog\u2019s timer started the moment the application requested a connection from the pool, capturing the time spent waiting in line. PostgreSQL only started its internal timer once the connection was acquired and the query actually hit the engine.The Resolution: This proved that the database wasn't necessarily slow at executing the SQL; rather, it was choked by the sheer volume of concurrent read connections. This validated our strategy to implement Redis as a front-line buffer to stop these read requests from ever reaching the DB connection pool.2. The Overreported CPU Discrepancy (Background Processes)The Conflict: AWS CloudWatch reported a sustained 92% host CPU utilization, but aggregating the total_exec_time of active queries in pg_stat_statements didn't mathematically account for that much processing power.The Cause: PostgreSQL background worker processes were conflicting with the read traffic metrics. Because the database was under heavy write stress from inventory updates alongside the massive read volume, Postgres was aggressively spinning up background Autovacuum workers to clean up dead tuples, alongside heavy page flushing to disk (bgwriter). CloudWatch measured the total OS-level CPU, while our query-specific tracking only saw the application's explicit reads.The Resolution: We tuned our autovacuum parameters to be less aggressive during peak hours and recognized that lowering read traffic via Redis would naturally reduce the generation of dead tuples and transaction overhead, lowering overall host CPU.\n\n",
+        "flagged": false
+      }
+    ],
+    "interview_evaluation": {
+      "criteria": {
+        "technical_depth": 5,
+        "problem_solving": 4,
+        "communication": 5,
+        "culture_fit": 4,
+        "practical_impact": 5
+      },
+      "total_score": 23,
+      "strengths": [
+        "Excellent technical knowledge and implementation details",
+        "Clear decision-making under constraints",
+        "Strong communication skills, concise and direct answers"
+      ],
+      "weaknesses": [
+        "Some minor discrepancies in metrics between tools (e.g., Datadog vs. PostgreSQL)",
+        "Could provide more context on the company's values and how they align with their own work style"
+      ],
+      "summary": "The candidate demonstrates exceptional technical expertise, problem-solving skills, and communication abilities. They effectively address complex technical challenges and provide tangible results to support their claims."
+    }
   },
   {
     "candidate_id": "dummy_amazon_backend_dev_2",
@@ -81,5 +133,43 @@
     "weaknesses": [],
     "reason": "Candidate failed preliminary ATS screening. LLM evaluation bypassed.",
     "status": "Rejected"
+  },
+  {
+    "candidate_id": "resume_6a7751c2",
+    "name": "Vedant Korade",
+    "role_id": "amazon_backend_dev",
+    "ats_score": 60,
+    "llm_score": 16,
+    "max_score": 25,
+    "alignment_score": 0.64,
+    "strengths": [
+      "Strong technical skills in Python and AI frameworks",
+      "Impressive project portfolio demonstrating innovation and results"
+    ],
+    "weaknesses": [
+      "Limited experience in Java, a required skill for the role",
+      "Lack of clear ownership or depth in projects"
+    ],
+    "reason": "Vedant has demonstrated strong technical skills and a good understanding of AI concepts. However, his experience is limited to a single company, and he may need to develop more ownership and depth in his work.",
+    "status": "Shortlisted"
+  },
+  {
+    "candidate_id": "resume_aa9c86dd",
+    "name": "Abhijit Mulik",
+    "role_id": "amazon_backend_dev",
+    "ats_score": 40,
+    "llm_score": 16,
+    "max_score": 25,
+    "alignment_score": 0.64,
+    "strengths": [
+      "Strong project experience with scalable backend services and APIs",
+      "Demonstrated ability to work with diverse technologies"
+    ],
+    "weaknesses": [
+      "Limited direct experience with Python, Java, and databases",
+      "Lack of clear ownership or leadership roles in projects"
+    ],
+    "reason": "Abhijit has shown potential in developing scalable backend services and APIs through his project experiences. However, he lacks direct experience with key skills required for the role.",
+    "status": "Shortlisted"
   }
 ]

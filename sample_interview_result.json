@@ -1,0 +1,37 @@
+{
+    "candidate_id": "uuid-v4",
+    "candidate_name": "Jane Doe",
+    "email": "jane@example.com",
+    "auth_hash": "sha256_hashed_password",
+    "status": "shortlisted",
+    "resume_score": {
+        "total_score": 21,
+        "alignment_score": 0.84
+    },
+    "interview_transcript": [
+        {
+            "q_num": 1,
+            "question": "Can you explain how you optimized the PostgreSQL database?",
+            "answer": "We added indexed views and partitioned tables, dropping query latency by 40%.",
+            "flagged": false
+        }
+    ],
+    "interview_evaluation": {
+        "criteria": {
+            "technical_depth": 4,
+            "problem_solving": 5,
+            "communication": 4,
+            "culture_fit": 4,
+            "practical_impact": 5
+        },
+        "total_score": 22,
+        "strengths": [
+            "Clear metrics provided",
+            "Deep DB optimization knowledge"
+        ],
+        "weaknesses": [
+            "Did not mention team collaboration steps"
+        ],
+        "summary": "Candidate demonstrated strong practical experience with clear execution metrics."
+    }
+}

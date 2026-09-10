@@ -1,0 +1,20 @@
+# Normalize all text files to LF in the repository.
+* text=auto eol=lf
+
+# Binary assets — never touch.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.pdf binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.mp4 binary
+*.webm binary
+*.wav binary
+*.mp3 binary
+*.onnx binary
+*.db binary
+*.sqlite binary
+*.sqlite3 binary

@@ -16,7 +16,9 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from core.config import settings
+from proctoring import audio
 from proctoring.analyzer import FrameAnalysis
+from proctoring.audio import AudioSummary
 
 # ── event kinds ──────────────────────────────────────────────────────────── #
 # These are the string keys stored in proctor_events.kind and shown to the
@@ -33,6 +35,8 @@ KIND_TAB_SWITCH        = "browser_tab_switch"
 KIND_WINDOW_BLUR       = "browser_window_blur"
 KIND_PASTE             = "browser_paste"
 KIND_FULLSCREEN_EXIT   = "browser_fullscreen_exit"
+KIND_BACKGROUND_VOICE  = "audio_background_voice"
+KIND_NO_SPEECH         = "audio_no_speech"
 
 # severity → weight used when computing the integrity score
 SEVERITY_WEIGHTS: dict[str, float] = {
@@ -200,6 +204,48 @@ class RuleEngine:
             KIND_FULLSCREEN_EXIT: "low",
         }.get(kind, "low")
         return self._instant(kind, severity, confidence=1.0, detail={})
+
+    def audio_events(self, summary: AudioSummary) -> list[ProctoringEvent]:
+        """Turn one answer's audio summary into events.
+
+        Called once per *accepted* spoken answer, not per attempt. A recording
+        that failed transcription is usually a broken microphone, and a
+        candidate should not accumulate integrity events for bad hardware.
+
+        Neither event is above ``medium``. :mod:`proctoring.audio` measures
+        loudness, not identity — it cannot distinguish a person feeding answers
+        from a television in the next room, so both readings are evidence for a
+        reviewer rather than a finding.
+        """
+        events: list[ProctoringEvent] = []
+
+        if summary.has_background_speech:
+            events.append(
+                self._instant(
+                    KIND_BACKGROUND_VOICE,
+                    "medium",
+                    confidence=audio.confidence(summary),
+                    detail=summary.as_detail(),
+                )
+            )
+
+        # An accepted transcript from a recording with nothing audible in it:
+        # the words reached the transcriber without passing through this
+        # microphone. Worth a look; not proof of anything on its own.
+        if not summary.spoke:
+            events.append(
+                self._instant(
+                    KIND_NO_SPEECH,
+                    "medium",
+                    confidence=0.6,
+                    detail=summary.as_detail(),
+                )
+            )
+
+        for event in events:
+            event.duration_seconds = round(summary.duration_seconds, 1)
+        return events
+
 
     # ------------------------------------------------------------------ #
     # Helpers                                                             #

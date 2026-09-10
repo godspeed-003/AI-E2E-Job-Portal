@@ -9,6 +9,7 @@ runs offline with no API key and never touches ``data/app.db``.
 from __future__ import annotations
 
 import os
+import shutil
 import tempfile
 from pathlib import Path
 
@@ -45,11 +46,17 @@ def fresh_db():
     ``close_all`` rather than ``close``: an AppTest run opens its own connection
     on Streamlit's script thread, and Windows refuses to unlink a file that any
     thread still has open.
+
+    The media directory is wiped with it. Row ids restart at 1 in every test, so
+    an interview's snapshots and recordings would otherwise be inherited by the
+    next test's interview 1 — the kind of leak that makes a media assertion pass
+    for the wrong reason.
     """
     db.close_all()
     base = str(settings.database_path)
     for suffix in ("", "-wal", "-shm"):
         Path(base + suffix).unlink(missing_ok=True)
+    shutil.rmtree(settings.media_dir, ignore_errors=True)
     db.init_db()
     yield
     db.close_all()

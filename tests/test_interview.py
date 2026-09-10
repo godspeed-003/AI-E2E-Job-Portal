@@ -75,11 +75,17 @@ def _shortlisted(
 
 
 def _answer_current(
-    interview: interviews.Interview, user: auth.User, text: str = GOOD_ANSWER
+    interview: interviews.Interview,
+    user: auth.User,
+    text: str = GOOD_ANSWER,
+    *,
+    audio_path: str = "",
 ) -> interviews.AnswerOutcome:
     turn = interviews.ask_next(interview.id)
     assert turn is not None
-    return interviews.submit_answer(interview.id, text, user_id=user.id)
+    return interviews.submit_answer(
+        interview.id, text, user_id=user.id, audio_path=audio_path
+    )
 
 
 # --------------------------------------------------------------------------- #

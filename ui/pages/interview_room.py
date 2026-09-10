@@ -29,6 +29,7 @@ import streamlit.components.v1 as components
 from core.config import settings
 from proctoring.session import ProctorSession
 from services import interview_service as interviews
+from services import recording_service as recordings
 from services.interview_service import (
     AnswerOutcome,
     Interview,
@@ -654,9 +655,9 @@ def _submit_audio(user: Any, interview: Interview, turn: Turn) -> None:
         st.rerun()
         return
 
+    sample_rate = stt_module.TARGET_SAMPLE_RATE
     with st.spinner("Transcribing your answer…"):
         try:
-            sample_rate = stt_module.TARGET_SAMPLE_RATE
             wav = stt_module.pcm_to_wav_bytes(samples, sample_rate)
             provider = stt_module.get_stt()
             transcript = provider.transcribe(wav)
@@ -671,7 +672,24 @@ def _submit_audio(user: Any, interview: Interview, turn: Turn) -> None:
         st.rerun()
         return
 
-    _do_submit(user, interview, turn, transcript.text, transcript_source="whisper")
+    # Keep the clip and read it for background speech, both only once the answer
+    # is real. A failed attempt is usually a bad microphone, and neither storing
+    # it nor holding it against the candidate would be right.
+    audio_path = recordings.save_answer(
+        interview.id, samples, sample_rate, seq=turn.seq
+    )
+    p = _proctor(interview.id)
+    if p is not None:
+        p.note_answer_audio(samples, sample_rate)
+
+    _do_submit(
+        user,
+        interview,
+        turn,
+        transcript.text,
+        transcript_source="whisper",
+        audio_path=audio_path,
+    )
 
 
 def _submit_text(user: Any, interview: Interview, turn: Turn, text: str) -> None:
@@ -684,6 +702,7 @@ def _do_submit(
     turn: Turn,
     text: str,
     transcript_source: str,
+    audio_path: str = "",
 ) -> None:
     with st.spinner("Checking your answer…"):
         try:
@@ -692,6 +711,7 @@ def _do_submit(
                 text,
                 user_id=user.id,
                 transcript_source=transcript_source,
+                audio_path=audio_path,
             )
         except InterviewError as exc:
             _flash("error", str(exc))

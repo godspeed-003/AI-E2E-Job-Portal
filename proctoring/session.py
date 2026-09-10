@@ -31,6 +31,7 @@ from typing import Any
 import numpy as np
 
 from core.config import settings
+from proctoring import audio
 from proctoring.analyzer import Analyzer, FrameAnalysis
 from proctoring.rules import ProctoringEvent, RuleEngine
 from services import proctor_service as proctor
@@ -127,6 +128,34 @@ class ProctorSession:
         with self._lock:
             event = self._rules.browser_event(kind)
         self._offer(event, self._elapsed(), None)
+
+    def note_answer_audio(self, samples: np.ndarray, sample_rate: int) -> int:
+        """Analyse one accepted answer's microphone audio. Returns events queued.
+
+        Script-thread only, and called *after* the answer is accepted: see
+        :meth:`RuleEngine.audio_events` for why a failed transcription must not
+        produce integrity events.
+
+        Video rules cannot see someone sitting off-camera reading answers aloud.
+        This is the only signal in the system that can, which is also why it is
+        wrapped in the same "never break the interview" try as everything else —
+        a numpy error on an odd buffer is not worth a candidate's session.
+        """
+        if not self.enabled:
+            return 0
+        try:
+            summary = audio.analyze(samples, sample_rate)
+            with self._lock:
+                events = self._rules.audio_events(summary)
+        except Exception as exc:
+            log.debug("Answer audio analysis failed: %s", exc)
+            return 0
+
+        elapsed = self._elapsed()
+        for event in events:
+            self._offer(event, elapsed, None)
+        return len(events)
+
 
     def finalize(self) -> tuple[int, str]:
         """Flush anything pending, then lock in the integrity score."""

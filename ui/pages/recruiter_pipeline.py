@@ -17,6 +17,7 @@ Streamlit reruns it on every click.
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 import streamlit as st
@@ -53,6 +54,8 @@ _EVENT_LABELS = {
     "browser_window_blur": "Left the window",
     "browser_paste": "Pasted into the answer box",
     "browser_fullscreen_exit": "Left fullscreen",
+    "audio_background_voice": "Another voice in the room",
+    "audio_no_speech": "Transcript with no audible speech",
 }
 
 
@@ -446,8 +449,27 @@ def _turn_block(turn: ivs.Turn) -> None:
         theme.html_block(" ".join(tags))
     if turn.answered:
         theme.html_block(theme.answer_block(turn.answer, who="Candidate"))
+        _clip(turn)
     else:
         st.caption("— unanswered —")
+
+
+def _clip(turn: ivs.Turn) -> None:
+    """The recording behind a transcript, when one was kept.
+
+    Every score on this page is derived from text a speech model guessed at.
+    Before a recruiter acts on a weak answer — or on the background-voice
+    signal in the next tab — this is the only way to check the model heard it.
+    """
+    if not turn.answer_audio_path:
+        return
+    path = Path(turn.answer_audio_path)
+    if not path.exists():
+        # Retention swept it, or the media directory moved between deployments.
+        st.caption("Recording no longer on disk.")
+        return
+    with st.expander("Listen to the recording"):
+        st.audio(str(path))
 
 
 def _integrity_panel(interview: ivs.Interview) -> None:

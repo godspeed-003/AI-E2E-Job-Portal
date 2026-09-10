@@ -215,8 +215,8 @@ every AI call goes through a provider interface so a local model is a one-line e
 ## Phase 8 — Verification & docs
 
 - [~] `pytest` suite green (no network required)
-      — 154 passing: 57 screening + 36 interview + 28 auth + 18 apply page + 12 routing + 3 migration;
-      Phases 4–6 will add to it
+      — 208 passing: 57 screening + 54 proctoring + 36 interview + 28 auth + 18 apply page +
+      12 routing + 3 migration; Phase 6 will add to it
 - [ ] `scripts/healthcheck.py` — verify DB, LLM, STT, TTS, CV backends
 - [ ] End-to-end smoke run: register → apply → shortlist → interview → score → review
 - [ ] Rewrite `README.md`: architecture, setup, provider switching, proctoring limits

@@ -86,7 +86,12 @@ def test_candidate_cannot_see_admin_pages():
 def test_recruiter_cannot_see_admin_pages():
     app = _run_as("recruiter")
     # Nor the candidate's apply screen: a recruiter has no resume to submit.
-    assert set(app.session_state["_pages"]) == {"home", "account"}
+    assert set(app.session_state["_pages"]) == {
+        "home",
+        "account",
+        "recruiter_pipeline",
+        "recruiter_roles",
+    }
 
 
 def test_admin_sees_every_page():
@@ -96,6 +101,8 @@ def test_admin_sees_every_page():
         "apply",
         "account",
         "interview_room",
+        "recruiter_pipeline",
+        "recruiter_roles",
         "admin_health",
         "admin_users",
         "admin_sandbox",

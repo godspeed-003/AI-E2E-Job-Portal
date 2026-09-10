@@ -182,13 +182,31 @@ every AI call goes through a provider interface so a local model is a one-line e
 
 ## Phase 6 — Recruiter & admin experience
 
-- [ ] Recruiter dashboard: ranked candidates, resume evaluation, interview score,
+- [x] Recruiter dashboard: ranked candidates, resume evaluation, interview score,
       transcript, integrity report with event timeline, snapshots and recording
-- [ ] Role management: create/edit roles, thresholds, interview windows
+      — `ui/pages/recruiter_pipeline.py`. Role picker, four summary tiles, the
+      ranked list, then three tabs per candidate (screening / interview /
+      integrity). A recruiter can override the status from here, and a shortlist
+      set by hand builds the interview and its plan exactly as an automatic one
+      would. No model call anywhere on the page — every number was already stored
+- [x] Role management: create/edit roles, thresholds, interview windows
+      — `ui/pages/recruiter_roles.py`. Each threshold has an explicit "use
+      default" state stored as NULL, so a role that was never tuned follows
+      `.env` as it changes instead of freezing today's value. A role cannot
+      change company (it would orphan its applications) and cannot be deleted
+      from the UI (the cascade would take candidates with it) — closing it is
+      the reversible way to stop intake
+- [x] `services/access.py` — the company boundary. Recruiter-facing pages never
+      look a record up directly; they ask here and get the record or an
+      `AccessError`. Missing and forbidden return the identical message, so the
+      id space cannot be walked to count a competitor's candidates
 - [x] Admin: user management, recruiter invites, provider health check panel
       — `ui/pages/admin_users.py` (search, role filter, enable/disable, force sign-out,
       audit tail) and `ui/pages/admin_health.py` (per-backend probes + model downloads)
-- [ ] Tests: ranking, access control on another company's data
+- [x] Tests: ranking, access control on another company's data
+      — 23 in `tests/test_recruiter.py`: cross-company reads on roles,
+      applications and interviews; a recruiter whose company is unset reaching
+      nothing rather than everything; ranking stability; both pages rendered
 
 ## Phase 6b — Sandbox / demo mode (admin can test without touching real data)
 

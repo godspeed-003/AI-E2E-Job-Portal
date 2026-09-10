@@ -28,6 +28,8 @@ from ui.pages import (
     auth_page,
     home,
     interview_room,
+    recruiter_pipeline,
+    recruiter_roles,
 )
 
 st.set_page_config(
@@ -63,6 +65,22 @@ NAV: tuple[tuple[str, str, str, str, tuple[str, ...], Callable[[], None]], ...] 
         ":material/videocam:",
         ("candidate", "admin"),
         interview_room.render,
+    ),
+    (
+        "recruiter_pipeline",
+        "Hiring",
+        "Pipeline",
+        ":material/leaderboard:",
+        ("recruiter", "admin"),
+        recruiter_pipeline.render,
+    ),
+    (
+        "recruiter_roles",
+        "Hiring",
+        "Roles",
+        ":material/work:",
+        ("recruiter", "admin"),
+        recruiter_roles.render,
     ),
     (
         "admin_health",

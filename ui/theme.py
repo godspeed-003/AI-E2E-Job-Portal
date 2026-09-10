@@ -83,10 +83,12 @@ STATUS_TONES: dict[str, tuple[str, str]] = {
     "expired": ("danger", "Window closed"),
     "abandoned": ("neutral", "Abandoned"),
     "scored": ("success", "Scored"),
-    # integrity verdicts
-    "clear": ("success", "Clear"),
+    # integrity verdicts — the exact strings compute_integrity_score emits, not
+    # near-misses: "clear"/"flagged" would fall through to a grey pill labelled
+    # from the raw value, so a flagged session would read as unremarkable.
+    "clean": ("success", "Clean"),
     "review": ("warning", "Needs review"),
-    "flagged": ("danger", "Flagged"),
+    "flag": ("danger", "Flagged"),
 }
 
 

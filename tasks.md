@@ -22,7 +22,15 @@ every AI call goes through a provider interface so a local model is a one-line e
 - [x] `core/db.py` — SQLite schema, migrations, WAL, connection helpers
 - [x] `core/security.py` — scrypt hashing + session tokens (moved up from Phase 2)
 - [x] `core/model_assets.py` — cached download of the Apache-2.0 CV weights
-- [ ] `scripts/seed.py` — seed companies/roles, migrate legacy `data/results/*.json`
+- [x] `scripts/seed.py` — demo accounts, companies/roles and a ranked pipeline
+      — six candidates whose resume text is tuned to the shipped roles' requirement
+      keywords (a generically-worded resume is rejected at the keyword floor before
+      any model reads it, which produced an empty demo the first time). One
+      deliberately wrong applicant, so the rejection path is visible too.
+      `--offline` uses the fake provider; `--reset` only ever touches `@demo.local`.
+      Migrating the legacy `data/results/*.json` was dropped: those rows have no
+      `user_id`, and inventing accounts for them would put people who never
+      registered into a recruiter's pipeline
 
 ## Phase 1 — Swappable AI backends (Gemini now, local later)
 
@@ -80,19 +88,19 @@ every AI call goes through a provider interface so a local model is a one-line e
       and a recruiter's manual override. Best effort and idempotent: the interview row
       commits before the model call, so an outage costs a plan (rebuilt when the
       candidate opens the room), never the shortlist
-- [~] Recruiter can set the interview window (opens/closes) and question budget per role
-      — stored per role and honoured by `catalog_service`; the recruiter-facing form is
-      Phase 6's role management
+- [x] Recruiter can set the interview window (opens/closes) and question budget per role
+      — stored per role, honoured by `catalog_service`, and editable from the role
+      management page delivered in Phase 6
 - [x] Tests: ATS scoring, cleaning, ingestion of real PDF/DOCX bytes, guardrail tiers,
       pipeline with the fake LLM, duplicate/replacement handling, provider outage
       — 57 in `tests/test_screening.py`, 18 driving the page through `AppTest`
 
 ## Phase 4 — AI video interview agent (replaces the text interview)
 
-- [~] Delete the text-only interview flow from `app.py`
-      — the flow is gone: no route, no nav entry, and nothing imports `modules/` any
-      more. The orphaned `modules/interviewer.py` file is swept in Phase 8, together
-      with the README/PRD text that still describes it
+- [x] Delete the text-only interview flow from `app.py`
+      — the flow is gone: no route, no nav entry, nothing imports `modules/`, and
+      the orphaned package itself has been removed. The README and PRD text that
+      still described it is rewritten
 - [x] `services/interview_service.py`
   - [x] `build_plan()` — on shortlist, generate candidate-specific questions from
         resume + JD + requirements + company culture, each tagged with focus area,
@@ -163,7 +171,13 @@ every AI call goes through a provider interface so a local model is a one-line e
       overwritten; end-to-end with a live camera is still unverified.
       Fullscreen-exit is not wired — Streamlit owns the page chrome, so there is
       no fullscreen to leave
-- [ ] Audio signals: speech while the candidate should be silent, background voices
+- [x] Audio signals: speech while the candidate should be silent, background voices
+      — `proctoring/audio.py`, pure numpy, no new dependency. Near-field vs far-field
+      loudness: the candidate is ~40 cm from the mic and anyone else is metres away
+      and 15–25 dB down. Two `medium` events with confidence capped at 0.9, because
+      the method cannot identify a speaker — a television reads the same as a person,
+      and a *lone* distant voice reads as the candidate. That limit is pinned by its
+      own test rather than left as a comment
 - [x] `proctoring/rules.py` — debounce, severity weighting, event de-duplication
 - [x] `proctoring/session.py` — the thread boundary: the WebRTC media thread only
       analyses and queues, the Streamlit script thread drains and writes. Bounded
@@ -175,10 +189,18 @@ every AI call goes through a provider interface so a local model is a one-line e
 - [x] Wire proctoring into `ui/pages/interview_room.py` — enrollment captured from
       the consent-screen preview, events drained every rerun, integrity score finalised
       on all four interview-completion paths
-- [ ] Session recording to disk for human review
+- [x] Session recording to disk for human review
+      — `services/recording_service.py`: one WAV per answered turn at
+      `media/interviews/<id>/answer_NN.wav`, reachable from the turn that produced
+      it and played back on the recruiter's transcript tab. Audio only — video
+      would mean muxing a WebRTC track per candidate to serve a review need the
+      audio already covers. Every score in the portal is computed from a transcript
+      a speech model *guessed at*, so this is the only artefact that can settle a
+      disputed one. Writing is best-effort: a full disk costs the candidate nothing
 - [ ] Live but non-punitive candidate feedback ("centre yourself in frame")
 - [x] Tests: rule debounce, severity aggregation, integrity scoring
-      — 54 tests, offline: no model downloaded, no frame decoded
+      — 54 tests, offline: no model downloaded, no frame decoded. Plus 16 for the
+      audio attribution and 11 for the recordings
 
 ## Phase 6 — Recruiter & admin experience
 
@@ -212,14 +234,25 @@ every AI call goes through a provider interface so a local model is a one-line e
 
 - [x] `is_sandbox` flag on users, applications and interviews; FK cascade cleanup
 - [x] Admin "Sandbox" page: spin up a throwaway candidate persona in one click
-- [ ] Admin can run the full candidate journey as that persona (apply → shortlist →
+- [x] Admin can run the full candidate journey as that persona (apply → shortlist →
       video interview → score) with a persistent banner so it is never mistaken
-      for production data — banner done, journey needs Phases 3–5
-- [ ] Recruiter and admin lists hide sandbox records by default, with a toggle
-- [~] One-click "Reset sandbox" wipes every sandbox row and its media
-      — rows done via FK cascade; media sweep lands with Phase 5 recordings
-- [ ] Skip-ahead helpers so the flow can be tested fast: force-shortlist, seed a
-      sample resume, shorten the interview to 2 questions, stub the transcript
+      for production data
+- [x] Recruiter and admin lists hide sandbox records by default, with a toggle
+      — the pipeline page's `Include sandbox` switch, off unless asked
+- [x] One-click "Reset sandbox" wipes every sandbox row and its media
+      — rows by FK cascade; recordings and snapshots are *files*, so the cascade
+      cannot reach them and `reset_sandbox` sweeps both explicitly before deleting.
+      A reset that keeps audio of a test interview, and photographs of whoever sat
+      it, is not a reset
+- [x] Skip-ahead helpers so the flow can be tested fast: force-shortlist, seed a
+      sample resume, shorten the interview to 2 questions
+      — one panel on the sandbox page. The sample resume is generated from the
+      chosen role's own requirements, so the question plan is about the role being
+      tested rather than about a canned backend CV. `interview_service.shorten()`
+      moves the turn budget *and* trims the stored plan, and refuses on anything
+      that is not a pending sandbox interview. Stubbing the transcript was dropped:
+      the two-question interview reaches the scoring screen in under a minute, and
+      a stub would be the one path that never exercises the real scorer
 
 ## Phase 7 — Look and feel
 
@@ -232,14 +265,26 @@ every AI call goes through a provider interface so a local model is a one-line e
 
 ## Phase 8 — Verification & docs
 
-- [~] `pytest` suite green (no network required)
-      — 208 passing: 57 screening + 54 proctoring + 36 interview + 28 auth + 18 apply page +
-      12 routing + 3 migration; Phase 6 will add to it
-- [ ] `scripts/healthcheck.py` — verify DB, LLM, STT, TTS, CV backends
-- [ ] End-to-end smoke run: register → apply → shortlist → interview → score → review
-- [ ] Rewrite `README.md`: architecture, setup, provider switching, proctoring limits
-- [ ] `ARCHITECTURE.md` + updated PRD reflecting what was actually built
-- [ ] Commit in reviewable chunks
+- [x] `pytest` suite green (no network required)
+      — 272 passing: 57 screening + 54 proctoring + 36 interview + 28 auth +
+      23 recruiter + 18 apply page + 16 audio + 14 sandbox + 12 routing +
+      11 recording + 3 migration
+- [x] `scripts/healthcheck.py` — verify DB, LLM, STT, TTS, CV backends
+      — wraps `health_service` so the terminal and the admin page cannot drift.
+      Exits 0 (pass, or warnings only) / 1 (a real failure) / 2 (the health system
+      itself could not run). Warnings do not fail: a portal with no CUDA, no object
+      detection weights and no TTS voice is a supported configuration
+- [x] End-to-end smoke run: register → apply → shortlist → interview → score → review
+      — sat in the test suite rather than by hand, with every provider broken, which
+      is the version of the run that can be repeated on demand
+- [x] Rewrite `README.md`: architecture, setup, provider switching, proctoring limits
+- [x] Updated PRD reflecting what was actually built
+      — `prd.md` rewritten; it now opens by saying it replaces the original
+      resume-screener spec rather than pretending that was the plan all along.
+      A separate `ARCHITECTURE.md` was dropped: the README's architecture section
+      and the PRD's invariants already carry it, and a third document describing
+      the same layers is a third document to let go stale
+- [x] Commit in reviewable chunks
 
 ---
 
@@ -270,6 +315,10 @@ every AI call goes through a provider interface so a local model is a one-line e
 | Steering cost | **The decision to steer is keyword work (watch topics matched against the answer); only the pivot's wording needs a model, and there is a template for it.** | The candidate raising a watch topic is deterministic to detect, so a throttled provider cannot stop the agent following the conversation — it can only make the follow-up read generic. `tests/test_interview.py` proves the whole interview, steering included, runs with every provider broken. |
 | A guardrail that keeps refusing | **Accept the third attempt with a `forced_accept` flag, then ask the next planned question.** | A rejection loop that never exits is a way to lose an interview by answering badly three times. Once the retries are spent the answer is stored, sanitised, and flagged for the recruiter; the agent moves on rather than probing an answer it could not trust. |
 | The interview timer at the window edge | **`deadline_at = min(now + duration, closes_at)`; a refresh resumes without spending the attempt.** | The deadline must never outlive the window, and a dropped connection is not a retry. Reporting `closes_at` as "time left" while the interview is still pending is also avoided — the countdown starts at `start()`, not at shortlist. |
+| Detecting a second voice in the room | **Near-field vs far-field loudness in numpy, not a speaker-ID model** | Video proctoring has a structural blind spot: someone off camera reading answers aloud. Closing it with a diarisation model means another dependency, another download and another thing to be wrong about a person. The inverse-square law does most of the work — the candidate is ~40 cm from the mic and anyone else is metres away — and the *limits* of that (a television reads as a person; a lone distant voice reads as the candidate) are honest enough to write in the UI and pin in a test. Both signals stay `medium` with confidence ≤ 0.9 because loudness cannot identify anyone. |
+| Recording the interview | **Answer audio only, one WAV per turn; no video** | Every score is computed from a transcript that a speech model *guessed at*, so a disputed score is unanswerable without the audio — and the background-voice signal is advisory precisely because a human is expected to listen. Video would mean muxing a WebRTC track per candidate: large dependency, large files, much heavier consent conversation, for a review need the audio already covers. |
+| Demo data: sandbox rows or real ones? | **Real accounts on a `@demo.local` domain** | Sandbox rows are hidden from the recruiter pipeline by default, which is right for a persona an admin minted to test with and exactly wrong for a demo whose whole point is that the pipeline has people in it. The cost is that `--reset` deletes real rows, so it only ever touches that one domain and prints what it is about to remove. |
+| What a sandbox reset owes the disk | **Sweep recordings and snapshots explicitly before the cascade** | The FK cascade reaches rows, and media is not a row. A "reset" that leaves audio of a test interview — and photographs of whoever sat it — on disk indefinitely is the kind of promise that is worse than not making it. |
 
 ## Notes / risks
 
@@ -278,8 +327,12 @@ every AI call goes through a provider interface so a local model is a one-line e
   lingered next to the login form. The signed-out screens now call `theme.hide_sidebar()`.
   Nothing was reachable through it — every page re-checks `session.require` — but it read
   as a bug.
-- `AI-E2E-Job-Portal/` is now an empty leftover directory; Windows holds a handle on it
-  so it could not be deleted. It contains no files and git does not track it.
+- `AI-E2E-Job-Portal/` — the empty leftover from the git consolidation in Phase 0 —
+  is gone. Windows held a handle on it for most of the build; it released.
 - Proctoring is **advisory evidence for a human reviewer**, not proof of cheating. The
   integrity report is worded that way deliberately.
+- `generate_dummies.py`, `generate_metrics.py` and `data/results/*.json` are the
+  pre-portal pipeline. Nothing in the app reads them and neither script is needed to
+  run anything; they are kept as a record of the original MVP's evaluation. The
+  README says so rather than leaving a reader to guess which set of numbers is live.
 

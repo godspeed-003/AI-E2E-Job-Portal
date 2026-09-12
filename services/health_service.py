@@ -64,7 +64,12 @@ def _check_database() -> Check:
     tables = [
         row["name"]
         for row in db.query(
-            "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+            # `sqlite_%` is SQLite's own bookkeeping — `sqlite_sequence` appears
+            # the moment an AUTOINCREMENT column does. Counting it reports one
+            # more table than the schema declares, which reads as a migration
+            # having gone wrong when it has not.
+            "SELECT name FROM sqlite_master WHERE type='table' "
+            "AND name NOT LIKE 'sqlite_%' ORDER BY name"
         )
     ]
     size_mb = round(path.stat().st_size / 1_048_576, 2) if path.exists() else 0.0

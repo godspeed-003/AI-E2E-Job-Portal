@@ -129,7 +129,7 @@ speech/                 stt (faster-whisper) · tts (pyttsx3 / piper / browser)
 proctoring/             analyzer (vision) · audio · rules · session (threading)
 prompts/                every prompt as a file, not a string literal
 scripts/                seed.py · healthcheck.py
-tests/                  272 tests, fully offline
+tests/                  279 tests, fully offline
 ```
 
 Three rules hold the shape together:
@@ -214,7 +214,7 @@ only way to check the guess. Video is never written to disk.
 python -m pytest -q
 ```
 
-272 tests, no network, no API key, no model weights, no frame decoded. The suite
+279 tests, no network, no API key, no model weights, no frame decoded. The suite
 points itself at a throwaway database in `conftest.py` before any project module
 is imported, so it can never touch `data/app.db`.
 
@@ -229,6 +229,7 @@ test_audio_proctoring.py  16   near/far-field attribution, and what it cannot do
 test_app_routing.py       12   role-aware navigation
 test_sandbox.py           14   the sandbox boundary and the skip-ahead shortcut
 test_recording.py         11   clips reachable from their turn; failures degrade
+test_interview_room.py     7   every phase of the room renders without raising
 test_db_migration.py       3   a legacy database upgrades in place
 ```
 

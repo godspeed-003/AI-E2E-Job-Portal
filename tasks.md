@@ -145,12 +145,14 @@ every AI call goes through a provider interface so a local model is a one-line e
 
 ## Phase 4b — Optional LiveKit transport (only after Phase 4 works end to end)
 
-- [ ] `scripts/livekit_agent.py` — a LiveKit Agents worker that calls the same
+- [!] `scripts/livekit_agent.py` — a LiveKit Agents worker that calls the same
       `interview_service` functions, for barge-in and streaming speech
-- [ ] Self-hosted LiveKit server config (Apache-2.0) or LiveKit Cloud free tier
-- [ ] Streamlit component embedding the LiveKit room, selected by `INTERVIEW_TRANSPORT`
-- [ ] Deferred deliberately: adds two extra processes to run, so it must not be on the
-      critical path for the demo
+- [!] Self-hosted LiveKit server config (Apache-2.0) or LiveKit Cloud free tier
+- [!] Streamlit component embedding the LiveKit room, selected by `INTERVIEW_TRANSPORT`
+- [!] Deferred deliberately, and this phase is closed rather than pending: two extra
+      processes to run fights the setup requirement, and the interview engine takes
+      text answers in and questions out, so a LiveKit worker can call the same
+      functions later without touching the logic
 
 ## Phase 5 — Video proctoring
 
@@ -197,7 +199,8 @@ every AI call goes through a provider interface so a local model is a one-line e
       audio already covers. Every score in the portal is computed from a transcript
       a speech model *guessed at*, so this is the only artefact that can settle a
       disputed one. Writing is best-effort: a full disk costs the candidate nothing
-- [ ] Live but non-punitive candidate feedback ("centre yourself in frame")
+- [!] Live but non-punitive candidate feedback ("centre yourself in frame")
+      — wanted, not built. Recorded here rather than dropped silently
 - [x] Tests: rule debounce, severity aggregation, integrity scoring
       — 54 tests, offline: no model downloaded, no frame decoded. Plus 16 for the
       audio attribution and 11 for the recordings
@@ -259,16 +262,21 @@ every AI call goes through a provider interface so a local model is a one-line e
 - [x] `.streamlit/config.toml` dark theme + `ui/theme.py` injected CSS design system
 - [x] Custom components: status pills, score rings, metric tiles, candidate cards,
       proctoring timeline, live interview HUD
-- [~] Consistent iconography and typography, responsive two-column layouts
-      — done for the auth, home, apply, account and admin screens; interview room pending
+- [x] Consistent iconography and typography, responsive two-column layouts
+      — the interview room was the last screen off the convention, and bringing
+      it on found a real bug: the score reveal passed `detail=` to a
+      `theme.score_ring` that has no such parameter, so the final screen of the
+      candidate journey raised `TypeError` the moment an interview finished.
+      Every service test passed throughout, because none of them rendered a
+      page. `tests/test_interview_room.py` now renders each phase
 - [x] Landing/login screen with product framing rather than a bare form
 
 ## Phase 8 — Verification & docs
 
 - [x] `pytest` suite green (no network required)
-      — 272 passing: 57 screening + 54 proctoring + 36 interview + 28 auth +
+      — 279 passing: 57 screening + 54 proctoring + 36 interview + 28 auth +
       23 recruiter + 18 apply page + 16 audio + 14 sandbox + 12 routing +
-      11 recording + 3 migration
+      11 recording + 7 interview room + 3 migration
 - [x] `scripts/healthcheck.py` — verify DB, LLM, STT, TTS, CV backends
       — wraps `health_service` so the terminal and the admin page cannot drift.
       Exits 0 (pass, or warnings only) / 1 (a real failure) / 2 (the health system

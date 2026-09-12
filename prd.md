@@ -54,7 +54,7 @@ Three things make it more than a resume screener:
 - Role management: thresholds, question budget, interview window, open/closed
 - Admin: user management, health probes, sandbox with skip-ahead and reset
 - Answer audio kept on disk for review
-- 272 offline tests
+- 279 offline tests
 
 ### Deliberately not built
 
@@ -305,7 +305,7 @@ evidence for a reviewer throughout.
 
 ## 10. Verification
 
-272 tests, fully offline: no network, no API key, no model weights, no frame
+279 tests, fully offline: no network, no API key, no model weights, no frame
 decoded. `tests/conftest.py` points at a throwaway database *before* any project
 module is imported, because `core/config.py` snapshots the environment at import
 time.
@@ -327,5 +327,3 @@ page inside the app.
 - LiveKit transport (Phase 4b) — deferred, not abandoned
 - Live non-punitive candidate feedback in the room
 - End-to-end camera verification of the browser-signal watcher
-- Interview room is the one screen not yet brought fully onto the theme's
-  two-column layout conventions

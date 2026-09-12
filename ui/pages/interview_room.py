@@ -787,13 +787,9 @@ def _phase_done(interview: Interview) -> None:
 
     with col_ring:
         theme.html_block(
-            theme.score_ring(
-                total,
-                maximum,
-                label="Interview score",
-                detail=f"{total}/{maximum} · {pct}%",
-            )
+            theme.score_ring(total, maximum, label="Interview score")
         )
+        st.caption(f"{total}/{maximum} · {pct}%")
 
     with col_summary:
         ev = interview.evaluation
@@ -841,12 +837,10 @@ def _phase_done(interview: Interview) -> None:
         for col, (key, val) in zip(cols, criteria.items()):
             with col:
                 theme.html_block(
-                    theme.score_ring(
-                        val,
-                        5,
-                        label=labels.get(key, key),
-                        detail=f"{val}/5",
-                    )
+                    # Smaller than the headline ring: five of these sit side by
+                    # side, and the same convention is used on the pipeline's
+                    # secondary scores.
+                    theme.score_ring(val, 5, label=labels.get(key, key), size=92)
                 )
 
     # ---- Transcript --------------------------------------------------------

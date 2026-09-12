@@ -655,6 +655,43 @@ def _budget(role: catalog.Role) -> tuple[int, int]:
     return planned, max(planned, settings.interview.max_turns)
 
 
+def shorten(interview_id: int, questions: int) -> Interview:
+    """Cut a *sandbox* interview down to ``questions`` questions.
+
+    Sitting six questions to check a change to the scoring screen is a waste of
+    ten minutes, and testers who cannot skip ahead stop testing the end of the
+    flow at all. Two questions still exercise every stage: plan, ask, answer,
+    score, integrity report.
+
+    Refused on real interviews, and refused once one has started. Shortening a
+    live interview would move the finish line under a candidate mid-answer, and
+    the whole premise of sandbox mode is that the two data sets never touch.
+    """
+    interview = get(interview_id)
+    if interview is None:
+        raise InterviewError("That interview no longer exists.")
+    if not interview.is_sandbox:
+        raise InterviewError("Only sandbox interviews can be shortened.")
+    if interview.status != "pending":
+        raise InterviewError(
+            "This interview has already started. Reset the sandbox and shortlist again."
+        )
+
+    planned = max(1, min(int(questions), MAX_PLAN_QUESTIONS))
+    # The turn ceiling has to move with the plan, or the room keeps asking
+    # follow-ups long after the last planned question has been answered.
+    columns: dict[str, Any] = {"planned_questions": planned, "max_turns": planned}
+    if len(interview.plan) > planned:
+        # Trim the stored plan as well. Leaving six questions behind a budget of
+        # two is not wrong — the budget wins in _decide — but the room prints the
+        # plan, and a tester should not have to know which number is binding.
+        trimmed = replace(interview.plan, questions=interview.plan.questions[:planned])
+        columns["plan"] = db.dumps(trimmed.as_dict())
+    _touch(interview_id, **columns)
+    db.audit(None, "interview.shortened", interview_id=interview_id, questions=planned)
+    return get(interview_id)  # type: ignore[return-value]
+
+
 def ensure_for_application(
     application: apps.Application, *, plan: bool = True
 ) -> Interview:

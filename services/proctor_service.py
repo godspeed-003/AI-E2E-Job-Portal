@@ -75,6 +75,33 @@ def save_enrollment_snapshot(interview_id: int, frame: np.ndarray) -> str | None
     return str(path)
 
 
+def purge_snapshots(interview_id: int) -> int:
+    """Delete an interview's snapshots from disk. Returns how many went.
+
+    Deleting an interview cascades its rows, including the event rows the
+    snapshots belong to. The JPEGs are not rows, so they survive the cascade and
+    have to be swept explicitly — otherwise a sandbox reset leaves photographs of
+    somebody's face behind, which is the one kind of leftover that actually
+    matters.
+    """
+    directory = settings.media_dir / "proctoring" / str(interview_id)
+    if not directory.exists():
+        return 0
+
+    removed = 0
+    for path in sorted(directory.glob("*.jpg")):
+        try:
+            path.unlink()
+            removed += 1
+        except OSError as exc:
+            log.warning("Could not delete %s: %s", path, exc)
+    try:
+        directory.rmdir()
+    except OSError:
+        pass  # something else is in there; leave it alone
+    return removed
+
+
 # ── event persistence ─────────────────────────────────────────────────────── #
 
 def record_event(

@@ -473,17 +473,39 @@ def sandbox_counts() -> dict[str, int]:
 
 
 def reset_sandbox(*, actor_id: int | None = None) -> dict[str, int]:
-    """Delete every sandbox row. Real candidate data is untouched.
+    """Delete every sandbox row and the media it wrote. Real data is untouched.
 
     Order matters only for the standalone sandbox applications: deleting the
     sandbox *users* already cascades to their applications, interviews, turns
     and proctor events via the foreign keys.
+
+    Media is swept first, and it is the reason this is not simply three DELETEs:
+    answer recordings and proctoring snapshots are files, not rows, so the
+    cascade cannot reach them. Leaving them behind would mean a "reset" that
+    keeps audio of a test interview — and photographs of whoever sat it —
+    indefinitely.
     """
+    # Imported here rather than at the top: auth_service is imported by almost
+    # everything, and this is the only function in it that touches media.
+    from services import proctor_service, recording_service
+
     removed = sandbox_counts()
+    interview_ids = [
+        int(row["id"])
+        for row in db.query("SELECT id FROM interviews WHERE is_sandbox = 1")
+    ]
+    files = 0
+    for interview_id in interview_ids:
+        try:
+            files += recording_service.purge(interview_id)
+            files += proctor_service.purge_snapshots(interview_id)
+        except Exception as exc:  # a locked file must not block the reset
+            log.warning("Sandbox media sweep failed for %s: %s", interview_id, exc)
+
     with db.transaction():
         db.execute("DELETE FROM interviews WHERE is_sandbox = 1")
         db.execute("DELETE FROM applications WHERE is_sandbox = 1")
         db.execute("DELETE FROM users WHERE is_sandbox = 1")
-    db.audit(actor_id, "sandbox.reset", **removed)
-    log.info("Sandbox reset: %s", removed)
+    db.audit(actor_id, "sandbox.reset", files=files, **removed)
+    log.info("Sandbox reset: %s, %s media file(s)", removed, files)
     return removed

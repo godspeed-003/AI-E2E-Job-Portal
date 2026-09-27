@@ -1,0 +1,4 @@
+key,http_requests,body_bytes,header_bytes,destination_hosts,all_loopback,leaves_the_host,mean_bytes_per_call,calls_containing_resume_text,bytes_per_resume_byte
+fake,0,0,0,[],True,False,0,0,0.0
+gemini,14,41798,1050,['generativelanguage.googleapis.com'],False,True,2985.5714285714284,2,76.55
+ollama,14,40870,0,['localhost'],True,False,2919.285714285714,2,74.85

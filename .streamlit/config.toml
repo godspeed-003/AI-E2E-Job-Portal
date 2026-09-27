@@ -1,0 +1,41 @@
+# Streamlit theme + server defaults.
+#
+# Keep this in git: it is the difference between "a Streamlit app" and something
+# that looks like a product. Colours here are mirrored in ui/theme.py so custom
+# HTML components match the native widgets exactly.
+
+[theme]
+base = "dark"
+primaryColor = "#6366F1"           # indigo — primary actions, focus rings
+backgroundColor = "#0B0F1A"        # page
+secondaryBackgroundColor = "#141A2A"  # cards, sidebar, inputs
+textColor = "#E8ECF5"
+linkColor = "#8B93FF"
+codeBackgroundColor = "#0F1524"
+borderColor = "#232B3E"
+showWidgetBorder = true
+baseRadius = "0.65rem"
+buttonRadius = "0.55rem"
+font = "sans-serif"
+headingFont = "sans-serif"
+codeFont = "monospace"
+
+[theme.sidebar]
+backgroundColor = "#0E1322"
+secondaryBackgroundColor = "#181F31"
+borderColor = "#232B3E"
+
+[server]
+# Resumes and interview recordings are the big uploads here.
+maxUploadSize = 25
+runOnSave = true
+
+[browser]
+gatherUsageStats = false
+
+[client]
+showErrorDetails = "full"
+toolbarMode = "minimal"
+
+[runner]
+magicEnabled = true

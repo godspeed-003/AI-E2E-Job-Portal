@@ -1,0 +1,13 @@
+key,value
+hardware_fault_scenario,flaky webcam: 6 no-face
+hardware_fault_score,83
+hardware_fault_verdict,clean
+hardware_fault_events,6
+hardware_fault_distinct_kinds,1
+coaching_scenario,coached: phone + notes + background voice + 2 glances
+coaching_score,75
+coaching_verdict,review
+coaching_events,5
+coaching_distinct_kinds,4
+score_gap,8
+score_gap_before_repair,-7

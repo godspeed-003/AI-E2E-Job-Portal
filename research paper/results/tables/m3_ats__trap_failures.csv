@@ -1,0 +1,3 @@
+resume_fragment,requirement,expected_match,actual_match,correct,score,rationale
+"C++ only, no plain C work",C,False,True,False,100,the lookbehind/lookahead must stop C matching inside C++
+Expert in PostgreSQL,SQL,True,False,False,0,"matches only because 'sql' is a suffix boundary in postgresql — accidental, and worth reporting as such"

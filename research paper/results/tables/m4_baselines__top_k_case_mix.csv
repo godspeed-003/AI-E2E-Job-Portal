@@ -1,0 +1,5 @@
+key,A_over_seller,C_honest_strong
+ats_keyword,7,3
+tfidf_cosine,7,3
+bm25,6,4
+resume_llm_simulated,6,4

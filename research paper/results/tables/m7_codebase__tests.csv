@@ -1,0 +1,16 @@
+file,tests,cases,lines,code_lines
+test_proctoring.py,58,58,816,515
+test_metrics_stats.py,56,56,409,202
+test_screening.py,52,57,668,483
+test_interview.py,36,36,755,536
+test_auth.py,25,28,316,212
+test_ranking.py,25,25,277,186
+test_recruiter.py,23,23,418,292
+test_apply_page.py,18,18,480,341
+test_sandbox.py,14,14,260,175
+test_audio_proctoring.py,13,16,221,170
+test_recording.py,11,11,163,119
+test_app_routing.py,10,12,167,117
+test_interview_room.py,7,7,148,104
+test_llm_gemini.py,7,7,113,86
+test_db_migration.py,3,3,55,42

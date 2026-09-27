@@ -1,0 +1,23 @@
+column,category,rationale,exists_in_schema
+applications.candidate_name,identifier,as parsed from the resume,True
+applications.resume_path,file reference,points at the uploaded document,True
+applications.resume_sha256,pseudonymous,content hash for dedup,True
+applications.resume_text,sensitive free text,"the entire resume, verbatim",True
+audit_log.action,metadata,administrative action,True
+audit_log.detail,metadata,may quote a name or an email,True
+audit_log.user_id,identifier,who did what,True
+interview_turns.answer,sensitive free text,the candidate's own words,True
+interview_turns.answer_audio_path,biometric media,voice recording,True
+interview_turns.question,derived,generated from the resume,True
+interview_turns.transcript_source,metadata,typed vs transcribed,True
+interviews.consent_accepted_at,consent record,when recording was agreed to,True
+interviews.enrollment_snapshot_path,biometric media,reference face image,True
+interviews.recording_path,biometric media,video and audio of the candidate,True
+login_attempts.email,identifier,retained for rate limiting,True
+proctor_events.detail,sensitive free text,what the detector saw,True
+proctor_events.snapshot_path,biometric media,frame captured on a flag,True
+sessions.token_hash,credential,sha256 of the bearer token,True
+sessions.user_agent,metadata,"browser string, weakly fingerprinting",True
+users.email,identifier,login identity; also the lockout key,True
+users.full_name,identifier,candidate's real name,True
+users.password_hash,credential,"scrypt digest, not reversible",True

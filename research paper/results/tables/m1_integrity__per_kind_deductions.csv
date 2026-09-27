@@ -1,0 +1,14 @@
+kind,severity,weight,score_after_1,verdict_after_1,cost_of_first,cost_of_second,score_after_5,verdict_after_5,verdict_after_2
+audio_background_voice,medium,3.0,97,clean,3,2,92,clean,clean
+audio_no_speech,medium,3.0,97,clean,3,2,92,clean,clean
+browser_fullscreen_exit,low,1.0,99,clean,1,1,97,clean,clean
+browser_paste,medium,3.0,97,clean,3,2,92,clean,clean
+browser_tab_switch,high,6.0,94,clean,6,4,84,clean,clean
+browser_window_blur,medium,3.0,97,clean,3,2,92,clean,clean
+looking_away,medium,3.0,97,clean,3,2,92,clean,clean
+multiple_faces,high,6.0,94,clean,6,4,84,clean,clean
+no_face,high,6.0,94,clean,6,4,84,clean,clean
+object_extra_person,high,6.0,94,clean,6,4,84,clean,clean
+object_notes,medium,3.0,97,clean,3,2,92,clean,clean
+object_phone,medium,3.0,97,clean,3,2,92,clean,clean
+substitution,critical,12.0,88,review,12,8,69,review,review

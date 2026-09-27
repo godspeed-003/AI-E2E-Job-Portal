@@ -1,0 +1,10 @@
+scenario,events,distinct_kinds,integrity_score,verdict
+nothing detected,0,0,100,clean
+one glance away,1,1,97,clean
+"distracted: 3 glances, 1 blur",4,2,88,clean
+flaky webcam: 6 no-face,6,1,83,clean
+camera turned away: 40 no-face,40,1,72,review
+second person in frame twice,2,1,90,clean
+"tab switching: 4 switches, 2 pastes",6,2,76,review
+substitution detected once,1,1,88,review
+coached: phone + notes + background voice + 2 glances,5,4,75,review

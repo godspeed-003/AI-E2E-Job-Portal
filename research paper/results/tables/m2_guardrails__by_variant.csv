@@ -1,0 +1,16 @@
+key,total,detected,detection_rate
+plain,15,15,1.0
+uppercase,1,1,1.0
+whitespace,1,1,1.0
+newline-separated,1,1,1.0
+leetspeak,1,0,0.0
+hyphenated,1,0,0.0
+lowercase,1,1,1.0
+padded,1,0,0.0
+llama-template,1,1,1.0
+chatml,1,1,1.0
+special-token,1,1,1.0
+role-prefix,2,2,1.0
+markdown-header,1,1,1.0
+spaced-token,1,1,1.0
+terse,2,2,1.0

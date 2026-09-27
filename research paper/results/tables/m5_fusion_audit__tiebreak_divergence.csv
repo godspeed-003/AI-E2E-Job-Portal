@@ -1,0 +1,8 @@
+key,value
+candidates,100
+distinct_llm_scores,24
+candidates_sharing_an_llm_score,97
+largest_tie_group,10
+positions_differing_from_baseline_at_zero_integrity,0
+kendall_tau_b_at_zero_integrity,0.1701010101010101
+kendall_tau_b_resume_only,0.1701010101010101

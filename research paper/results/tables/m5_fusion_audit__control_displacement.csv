@@ -1,0 +1,9 @@
+key,value
+controls,50
+moved_beyond_tolerance,31
+internal_tau_b_before,0.7861224489795918
+internal_tau_b_after,0.8595918367346939
+internal_tau_b_gain,0.07346938775510203
+pairs_compared,1225
+pairs_order_preserved,1148
+pairs_order_inverted,77

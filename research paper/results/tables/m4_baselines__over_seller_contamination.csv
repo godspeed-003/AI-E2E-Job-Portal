@@ -1,0 +1,5 @@
+ranker,over_sellers_in_top_10,genuinely_relevant_in_top_10,ndcg@10
+ats_keyword,7,3,0.4843
+tfidf_cosine,7,3,0.5846
+bm25,6,3,0.6234
+resume_llm_simulated,6,4,0.5572

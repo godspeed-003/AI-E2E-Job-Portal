@@ -1,6 +1,53 @@
+# --- secrets ---
 .env
+.env.*
+!.env.example
+env
+*.pem
+*.key
+application_default_credentials.json
+
+# --- python ---
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+.venv/
+venv/
+env/
+ENV/
+.tox/
+.nox/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+
+# --- runtime data (generated) ---
+data/app.db
+data/app.db-wal
+data/app.db-shm
+data/media/
+data/uploads/
+data/tmp/
+logs/
+*.log
+
+# --- local model caches ---
+models/
+.cache/
+
+# --- editors / os ---
 .DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

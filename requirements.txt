@@ -1,4 +1,53 @@
-streamlit
-pymupdf
-google-generativeai
-python-dotenv
+# AI E2E Job Portal — pinned dependencies (verified on Python 3.12.10)
+#
+#   python -m venv .venv
+#   .venv\Scripts\python -m pip install -r requirements.txt     # Windows
+#   .venv/bin/python  -m pip install -r requirements.txt        # Linux / macOS
+#
+# Every entry is free and open source. There is no cloud SDK in here on purpose: the
+# Gemini backend is plain REST over `requests`, the same shape as the Ollama and
+# OpenAI-compatible backends, so moving to a local model is an env var and not an
+# install. Versions are pinned to what the build was actually verified against.
+#
+# Torch is only used by ultralytics (proctoring object detection) and this project
+# never needs a GPU. The CPU index below serves 2.14.0+cpu, which outranks the plain
+# 2.14.0 on PyPI, so `pip install -r` picks the small CPU wheel rather than the
+# multi-gigabyte CUDA one.
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+# --- Web UI ----------------------------------------------------------------
+streamlit==1.63.0
+extra-streamlit-components==0.1.81  # cookie manager: a session survives a refresh
+streamlit-webrtc==0.77.0            # camera + mic for the interview room
+streamlit-js-eval==1.0.0            # browser signals: tab switch, fullscreen exit
+
+# --- Config, HTTP and the AI backends --------------------------------------
+python-dotenv==1.2.3
+requests==2.34.2                    # Gemini / Ollama / OpenAI-compatible REST
+
+# --- Resume ingestion ------------------------------------------------------
+pymupdf==1.28.2                     # PDF text extraction
+python-docx==1.2.0                  # DOCX, tables included
+
+# --- Speech ----------------------------------------------------------------
+faster-whisper==1.2.1               # local STT (MIT); brings ctranslate2 + av
+pyttsx3==2.99                       # local TTS: SAPI5 on Windows, espeak on Linux
+numpy==2.5.2                        # audio buffers in speech/stt.py
+
+# --- Vision / proctoring ---------------------------------------------------
+# mediapipe depends on opencv-contrib-python and ultralytics on opencv-python. Both
+# ship a `cv2` module and the last one installed wins; contrib is a superset, so if
+# face detection ever fails to import, put it back on top:
+#   pip install --force-reinstall opencv-contrib-python==5.0.0.93
+opencv-contrib-python==5.0.0.93     # YuNet detection + SFace matching (Apache-2.0)
+mediapipe==1.0.1                    # face landmarks → head pose (Apache-2.0)
+ultralytics==8.4.138                # YOLO11n: phone, second person, book (AGPL-3.0)
+torch==2.14.0                       # ultralytics runtime — CPU wheel, see index above
+torchvision==0.29.0
+
+# --- Development -----------------------------------------------------------
+pytest==9.1.1                       # the suite runs fully offline
+
+# The legacy generate_metrics.py additionally wants matplotlib and seaborn. It
+# predates the portal's own metrics and is not needed to run the app, so neither is
+# pinned here.

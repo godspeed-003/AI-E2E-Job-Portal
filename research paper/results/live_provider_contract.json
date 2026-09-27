@@ -1,0 +1,70 @@
+{
+  "measured_at_utc": "2026-09-24T12:54:19+00:00",
+  "model": "gemini-2.5-flash",
+  "probes": [
+    {
+      "probe": "screening_evaluation",
+      "schema": "shipped, sanitised",
+      "expected": "accepted",
+      "max_output_tokens": 1200,
+      "http_status": 200,
+      "accepted": true,
+      "finish_reason": "STOP",
+      "parsed_as_object": true,
+      "required_fields_missing": "none",
+      "seconds": 5.309,
+      "prompt_tokens": 27,
+      "output_tokens": 293,
+      "thought_tokens": 371,
+      "error": ""
+    },
+    {
+      "probe": "guardrail_answer_verdict",
+      "schema": "shipped, sanitised",
+      "expected": "accepted",
+      "max_output_tokens": null,
+      "http_status": 200,
+      "accepted": true,
+      "finish_reason": "STOP",
+      "parsed_as_object": true,
+      "required_fields_missing": "none",
+      "seconds": 2.983,
+      "prompt_tokens": 36,
+      "output_tokens": 31,
+      "thought_tokens": 232,
+      "error": ""
+    },
+    {
+      "probe": "guardrail_answer_verdict",
+      "schema": "pre-fix: properties emptied, required kept",
+      "expected": "rejected",
+      "max_output_tokens": null,
+      "http_status": 400,
+      "accepted": false,
+      "finish_reason": null,
+      "parsed_as_object": null,
+      "required_fields_missing": "all",
+      "seconds": 0.489,
+      "prompt_tokens": null,
+      "output_tokens": null,
+      "thought_tokens": null,
+      "error": "{\n  \"error\": {\n    \"code\": 400,\n    \"message\": \"* GenerateContentRequest.generation_config.response_schema.required[0]: property is not defined\\n* GenerateConte"
+    },
+    {
+      "probe": "guardrail_answer_verdict",
+      "schema": "unsanitised: + additionalProperties",
+      "expected": "rejected",
+      "max_output_tokens": null,
+      "http_status": 400,
+      "accepted": false,
+      "finish_reason": null,
+      "parsed_as_object": null,
+      "required_fields_missing": "none",
+      "seconds": 0.407,
+      "prompt_tokens": null,
+      "output_tokens": null,
+      "thought_tokens": null,
+      "error": "{\n  \"error\": {\n    \"code\": 400,\n    \"message\": \"Invalid JSON payload received. Unknown name \\\"additionalProperties\\\" at 'generation_config.response_schema': Can"
+    }
+  ]
+}

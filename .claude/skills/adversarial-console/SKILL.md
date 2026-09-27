@@ -137,7 +137,8 @@ make that sentence false.
   same number.
 - One `critical` event floors the verdict at `review` even when the arithmetic
   says clean.
-- Repeats of the same kind cost half.
+- Repeats of the same kind cost less than the first, and two distinct kinds cost
+  more than one kind twice.
 
 ## Probing a non-deterministic model
 

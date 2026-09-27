@@ -1,0 +1,11 @@
+probe,schema,expected,max_output_tokens,http_status,accepted,finish_reason,parsed_as_object,required_fields_missing,seconds,prompt_tokens,output_tokens,thought_tokens,error
+screening_evaluation,"shipped, sanitised",accepted,1200,200,True,STOP,True,none,5.309,27,293,371,
+guardrail_answer_verdict,"shipped, sanitised",accepted,,200,True,STOP,True,none,2.983,36,31,232,
+guardrail_answer_verdict,"pre-fix: properties emptied, required kept",rejected,,400,False,,,all,0.489,,,,"{
+  ""error"": {
+    ""code"": 400,
+    ""message"": ""* GenerateContentRequest.generation_config.response_schema.required[0]: property is not defined\n* GenerateConte"
+guardrail_answer_verdict,unsanitised: + additionalProperties,rejected,,400,False,,,none,0.407,,,,"{
+  ""error"": {
+    ""code"": 400,
+    ""message"": ""Invalid JSON payload received. Unknown name \""additionalProperties\"" at 'generation_config.response_schema': Can"

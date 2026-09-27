@@ -63,7 +63,17 @@ class LLMSettings:
     max_retries: int = 2
 
     gemini_api_keys: tuple[str, ...] = ()
-    gemini_model: str = "gemini-2.5-flash"
+    # Hosted model names expire. gemini-2.5-flash was the default until
+    # 2026-09-26, when it began answering every request with HTTP 404 "no longer
+    # available to new users" — three days after it last served a measurement in
+    # metrics/m9_provider_contract.py. The name is pinned rather than set to
+    # gemini-flash-latest on purpose: a hiring decision has to stay attributable
+    # to a named model, and an alias silently changing which model scored a
+    # candidate is worse than a 404 that says so. Check callability with
+    # ``GET {gemini_api_base}/models`` — but note the listing still advertised
+    # 2.5-flash after it stopped answering, so the listing is necessary and not
+    # sufficient; only a generateContent call proves a model is usable.
+    gemini_model: str = "gemini-3.8-flash"
     gemini_api_base: str = "https://generativelanguage.googleapis.com/v1beta"
 
     ollama_base_url: str = "http://localhost:11434"
@@ -198,7 +208,7 @@ def get_settings() -> Settings:
             timeout_seconds=_int("LLM_TIMEOUT_SECONDS", 120),
             max_retries=_int("LLM_MAX_RETRIES", 2),
             gemini_api_keys=_gemini_keys(),
-            gemini_model=_str("GEMINI_MODEL", "gemini-2.5-flash"),
+            gemini_model=_str("GEMINI_MODEL", "gemini-3.8-flash"),
             gemini_api_base=_str(
                 "GEMINI_API_BASE", "https://generativelanguage.googleapis.com/v1beta"
             ).rstrip("/"),

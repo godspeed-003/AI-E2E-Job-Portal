@@ -26,10 +26,12 @@ import pytest
 from core import db
 from proctoring.analyzer import DetectedObject, FrameAnalysis, HeadPose
 from proctoring.rules import (
+    KIND_BACKGROUND_VOICE,
     KIND_EXTRA_PERSON,
     KIND_LOOKING_AWAY,
     KIND_MULTIPLE_FACES,
     KIND_NO_FACE,
+    KIND_NOTES,
     KIND_PASTE,
     KIND_PHONE,
     KIND_SUBSTITUTION,
@@ -304,23 +306,74 @@ def test_a_clean_session_scores_full_marks():
 def test_repeats_of_one_kind_cost_less_than_the_first():
     once = compute_integrity_score(_rows((KIND_TAB_SWITCH, "high")))[0]
     twice = compute_integrity_score(_rows((KIND_TAB_SWITCH, "high")) * 2)[0]
+    ten_times = compute_integrity_score(_rows((KIND_TAB_SWITCH, "high")) * 10)[0]
 
     assert once == 94                       # 100 - 6
-    assert twice == 91                      # a second switch costs half, not another 6
+    assert twice == 90                      # a second switch costs 4, not another 6
+    # Sublinear: each further repeat costs less than the one before it, so ten
+    # switches are worse than two without being five times worse.
+    assert ten_times < twice
+    assert (twice - ten_times) < (once - twice) * 10
 
 
-def test_different_kinds_each_cost_full_weight():
-    score, _ = compute_integrity_score(
-        _rows((KIND_TAB_SWITCH, "high"), (KIND_PASTE, "medium"))
-    )
-    assert score == 91                      # 100 - 6 - 3
+def test_two_distinct_kinds_cost_more_than_one_kind_twice():
+    """The property the old per-event sum got backwards.
+
+    Two different things going wrong is stronger evidence than one thing going
+    wrong twice, even when the severities are identical. The old function could
+    not express that — it charged per event and discounted only repeats — which
+    is how six dropped frames came to outrank a phone on the desk.
+    """
+    one_kind_twice = compute_integrity_score(_rows((KIND_TAB_SWITCH, "high")) * 2)[0]
+    two_kinds_once = compute_integrity_score(
+        _rows((KIND_TAB_SWITCH, "high"), (KIND_MULTIPLE_FACES, "high"))
+    )[0]
+
+    assert two_kinds_once < one_kind_twice
+    assert two_kinds_once == 85             # (6 + 6) × 1.25 co-occurrence
 
 
 def test_the_score_never_falls_below_zero():
-    score, verdict = compute_integrity_score(_rows((KIND_NO_FACE, "critical")) * 40)
+    score, verdict = compute_integrity_score(
+        _rows(*[(f"kind_{i}", "critical") for i in range(40)])
+    )
 
     assert score == 0
     assert verdict == "flag"
+
+
+def test_one_repeated_signal_cannot_floor_the_score_on_its_own():
+    """A single sub-critical channel failing, however hard, is not a finding.
+
+    Forty no-face events is one broken camera or one empty chair, and the
+    function must not claim to know which: it lands in ``review`` — the honest
+    verdict for an ambiguous signal — rather than the ``flag`` floor, which
+    corroborating evidence should be needed to reach. A repeated ``critical``
+    kind is the deliberate exception, since that severity is assigned only to
+    candidate substitution.
+    """
+    high, high_verdict = compute_integrity_score(_rows((KIND_NO_FACE, "high")) * 40)
+    critical, critical_verdict = compute_integrity_score(
+        _rows((KIND_SUBSTITUTION, "critical")) * 40
+    )
+
+    assert high > 55 and high_verdict == "review"
+    assert critical < high and critical_verdict == "flag"
+
+
+def test_sustained_absence_cannot_be_marked_clean():
+    """The bypass a pure worst-severity-per-kind rule would have opened.
+
+    If repeats were free, turning the camera away for the whole interview would
+    cost exactly as much as blocking it for four seconds, and would be reported
+    to the recruiter as ``clean``.
+    """
+    brief = compute_integrity_score(_rows((KIND_NO_FACE, "high")) * 2)
+    sustained = compute_integrity_score(_rows((KIND_NO_FACE, "high")) * 40)
+
+    assert brief[1] == "clean"
+    assert sustained[0] < 80
+    assert sustained[1] == "review"
 
 
 def test_a_handful_of_minor_slips_still_reads_as_clean():
@@ -338,13 +391,60 @@ def test_a_middling_score_asks_for_review_rather_than_flagging():
             (KIND_TAB_SWITCH, "high"),
             (KIND_NO_FACE, "high"),
             (KIND_LOOKING_AWAY, "high"),
-            (KIND_MULTIPLE_FACES, "high"),
-            (KIND_PHONE, "high"),
         )
     )
 
     assert 55 <= score < 80
     assert verdict == "review"
+
+
+def test_a_hardware_fault_outscores_a_coached_candidate():
+    """The measured inversion this function was rewritten to remove.
+
+    Under the original per-event sum a flaky webcam scored 79 and was sent for
+    human review while a candidate with a phone, written notes, another voice in
+    the room and two glances away scored 86 and was reported clean. Both halves
+    matter: the ordering has to be right *and* the coached candidate has to stop
+    being labelled clean, which is what a recruiter actually reads.
+    """
+    flaky_webcam = compute_integrity_score(_rows((KIND_NO_FACE, "high")) * 6)
+    coached = compute_integrity_score(
+        _rows(
+            (KIND_PHONE, "medium"),
+            (KIND_NOTES, "medium"),
+            (KIND_BACKGROUND_VOICE, "medium"),
+            (KIND_LOOKING_AWAY, "medium"),
+            (KIND_LOOKING_AWAY, "medium"),
+        )
+    )
+
+    assert flaky_webcam[0] > coached[0]
+    assert flaky_webcam[1] == "clean"
+    assert coached[1] == "review"
+
+
+def test_the_score_never_rises_as_events_accumulate():
+    """Monotonicity, swept over every kind at three repeats each."""
+    rows: list[dict[str, str]] = []
+    previous = 100
+    for kind, severity in (
+        (KIND_NO_FACE, "high"),
+        (KIND_MULTIPLE_FACES, "high"),
+        (KIND_LOOKING_AWAY, "medium"),
+        (KIND_SUBSTITUTION, "critical"),
+        (KIND_PHONE, "medium"),
+        (KIND_EXTRA_PERSON, "high"),
+        (KIND_NOTES, "medium"),
+        (KIND_TAB_SWITCH, "high"),
+        (KIND_WINDOW_BLUR, "medium"),
+        (KIND_PASTE, "medium"),
+        (KIND_BACKGROUND_VOICE, "medium"),
+    ):
+        for _ in range(3):
+            rows.append({"kind": kind, "severity": severity})
+            score, _verdict = compute_integrity_score(rows)
+            assert score <= previous, f"adding {kind} raised the score"
+            previous = score
 
 
 def test_one_substitution_goes_to_review_even_though_the_score_looks_fine():
@@ -453,14 +553,17 @@ def test_recompute_is_derived_from_the_rows_so_it_can_run_again_later(interview_
 
 
 def test_the_same_kind_at_two_severities_scores_the_same_every_time(interview_id):
-    # Diminishing returns make the score order-sensitive when one kind arrives at
-    # mixed severities, so this only holds while events_for is deterministic.
+    # Worst severity wins, so the critical reading sets this kind's weight and
+    # the high one only contributes a repeat. That makes the result independent
+    # of arrival order — the old per-event discount charged whichever severity
+    # happened to arrive second at half price, so this assertion used to hold
+    # only while events_for stayed deterministic.
     proctor.record_event(interview_id, _event(KIND_NO_FACE, "high"), elapsed_seconds=5.0)
     proctor.record_event(
         interview_id, _event(KIND_NO_FACE, "critical"), elapsed_seconds=9.0
     )
 
-    assert proctor.recompute(interview_id) == (88, "review")  # 100 - 6 - 12/2
+    assert proctor.recompute(interview_id) == (80, "review")  # 100 - 12 × (1 + ln 2)
 
 
 def test_an_interview_nobody_flagged_finalises_as_clean(interview_id):

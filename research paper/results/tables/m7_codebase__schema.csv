@@ -1,0 +1,12 @@
+table,columns,foreign_keys,indexes,cascade_deletes,not_null_columns,pii_columns,pii_column_names
+applications,22,2,3,2,19,4,applications.candidate_name; applications.resume_path; applications.resume_sha256; applications.resume_text
+audit_log,5,0,1,0,3,3,audit_log.action; audit_log.detail; audit_log.user_id
+companies,5,0,1,0,4,0,
+interview_turns,18,1,1,1,12,4,interview_turns.answer; interview_turns.answer_audio_path; interview_turns.question; interview_turns.transcript_source
+interviews,27,1,2,1,13,3,interviews.consent_accepted_at; interviews.enrollment_snapshot_path; interviews.recording_path
+login_attempts,4,0,1,0,3,1,login_attempts.email
+proctor_events,10,1,1,1,8,2,proctor_events.detail; proctor_events.snapshot_path
+roles,12,1,2,1,6,0,
+schema_meta,2,0,1,0,1,0,
+sessions,6,1,2,1,3,2,sessions.token_hash; sessions.user_agent
+users,10,0,2,0,7,3,users.email; users.full_name; users.password_hash

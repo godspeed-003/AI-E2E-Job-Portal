@@ -1,0 +1,7 @@
+key,value
+ats_keyword__vs__tfidf_cosine,0.701118425526614
+ats_keyword__vs__bm25,0.7229007455429748
+ats_keyword__vs__resume_llm_simulated,0.9111118564112569
+tfidf_cosine__vs__bm25,0.9365656565656566
+tfidf_cosine__vs__resume_llm_simulated,0.6104752288529207
+bm25__vs__resume_llm_simulated,0.6328021251333527

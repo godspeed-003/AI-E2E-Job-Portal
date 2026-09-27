@@ -1,0 +1,15 @@
+call,body_bytes,prompt_chars,contains_resume_text,contains_candidate_answer,schema_constrained,stage
+1,4271,3363,True,False,True,resume_evaluation
+2,4146,3767,True,False,False,interview_plan
+3,923,710,False,True,True,guardrail_tier2
+4,3678,3336,False,True,False,next_turn
+5,979,766,False,True,True,guardrail_tier2
+6,4146,3802,False,True,False,next_turn
+7,914,701,False,True,True,guardrail_tier2
+8,4408,4062,False,True,False,next_turn
+9,923,710,False,True,True,guardrail_tier2
+10,4417,4071,False,True,False,next_turn
+11,979,766,False,True,True,guardrail_tier2
+12,4483,4137,False,True,False,next_turn
+13,914,701,False,True,True,guardrail_tier2
+14,5689,5332,False,True,False,interview_score

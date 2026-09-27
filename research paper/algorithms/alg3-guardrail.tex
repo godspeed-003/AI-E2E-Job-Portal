@@ -1,0 +1,72 @@
+% Algorithm 3 — two-tier answer guardrail.
+% Source of truth: services/guardrail_service.py :: check_answer, sanitize_resume
+% Constants verified against the running system on 2026-09-27:
+%   5 injection pattern families (_INJECTION_PATTERNS)
+%   _OFF_TOPIC_OVERLAP = 0.06
+% Exercised by metrics/m2_guardrails.py, which reports the injection
+% resistance rate and the false-positive rate on benign text.
+%
+% Requires: \usepackage{algorithm} \usepackage{algpseudocode}
+
+\begin{algorithm}[t]
+\caption{Two-tier answer guardrail}
+\label{alg:guardrail}
+\begin{algorithmic}[1]
+\Require Candidate answer $x$; the question $q$ it responds to;
+         injection families $P$ ($|P| = 5$);
+         off-topic overlap floor $\theta = 0.06$
+\Ensure  A verdict: \textsc{accept}, \textsc{strip}, or \textsc{reject}
+\Statex
+\Statex \textbf{Tier 1 --- structural, deterministic, always runs}
+\State $\text{hits} \gets \{\, p \in P : p \text{ matches } x \,\}$
+\State $x' \gets \textsc{StripInjections}(x)$
+    \Comment{remove the matched spans, keep the rest}
+\State $W_x \gets \textsc{ContentWords}(x')$,\;
+       $W_q \gets \textsc{ContentWords}(q)$
+    \Comment{stopwords removed}
+\State $o \gets |W_x \cap W_q| \,/\, \max(1, |W_q|)$
+\Statex
+\If{$\text{hits} = \emptyset$ \textbf{and} $o \geq \theta$}
+    \State \Return $(\textsc{accept},\ x')$
+        \Comment{no model call: the common case is free}
+\EndIf
+\Statex
+\Statex \textbf{Tier 2 --- model adjudication, only when Tier 1 is suspicious}
+\State $v \gets \textsc{ModelVerdict}(x', q)$
+    \Comment{schema-constrained: \{safe, reason\}}
+\If{$v.\text{safe}$}
+    \State \Return $(\textsc{accept},\ x')$
+\Else
+    \State \Return $(\textsc{reject},\ v.\text{reason})$
+        \Comment{costs the candidate a retry, not the turn}
+\EndIf
+\end{algorithmic}
+\end{algorithm}
+
+% ---------------------------------------------------------------------------
+% Prose for the body text.
+%
+% Two properties of this design are worth arguing for in the paper.
+%
+% (1) The model is the second tier, not the first. Tier 1 is regex and set
+%     arithmetic, so the overwhelming majority of answers are cleared with zero
+%     model calls and zero added latency; the model is consulted only for the
+%     answers that already look wrong. This is what makes the guardrail
+%     affordable enough to run on every turn, and it is also what makes it
+%     robust when the provider is throttled: a rate-limited model degrades the
+%     adjudication of suspicious answers, not the acceptance of ordinary ones.
+%
+% (2) sanitize_resume NEVER rejects. The resume path (as opposed to the answer
+%     path above) strips matched injection spans and records what it stripped,
+%     but always returns a document. This is deliberate and should be stated:
+%     a false positive on the answer path costs the candidate one retry, while
+%     a false positive on the resume path would silently edit — or refuse — an
+%     honest candidate's application. The asymmetry in the cost of being wrong
+%     is the reason the two paths have different failure modes, and
+%     metrics/m2_guardrails.py reports the false-positive rate on benign
+%     resumes precisely because that is the number this decision trades on.
+%
+% Scope limit, to state in the paper: the injection corpus is constructed, so
+% the resistance rate measures resistance to the five families that were
+% implemented and not to an adaptive adversary. It is a regression test with a
+% number attached, not a security evaluation.

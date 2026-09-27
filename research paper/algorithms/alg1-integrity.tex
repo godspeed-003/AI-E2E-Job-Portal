@@ -1,0 +1,72 @@
+% Algorithm 1 — integrity scoring.
+% Source of truth: proctoring/rules.py :: compute_integrity_score
+% Constants verified against the running system on 2026-09-27:
+%   SEVERITY_WEIGHTS = {critical: 12.0, high: 6.0, medium: 3.0, low: 1.0}
+%   REPEAT_GROWTH = 1.0, CO_OCCURRENCE_STEP = 0.25, CO_OCCURRENCE_CAP = 2.0
+%   integrity_fail_below = 55 (core/config.py)
+% Exercised by metrics/m1_integrity.py; the monotonicity property below is
+% checked over 39 cumulative event sequences.
+%
+% Requires: \usepackage{algorithm} \usepackage{algpseudocode}
+
+\begin{algorithm}[t]
+\caption{Integrity scoring $c(E) \rightarrow \text{integrity}$}
+\label{alg:integrity}
+\begin{algorithmic}[1]
+\Require Proctoring event set $E$; severity weights $w$; growth $\gamma\!=\!1.0$;
+         co-occurrence step $\sigma\!=\!0.25$, cap $\kappa\!=\!2.0$
+\Ensure  Integrity score in $[0,100]$ and a verdict
+\Statex
+\State $K \gets \{\,\text{kind}(e) : e \in E\,\}$ \Comment{distinct event kinds}
+\State $d \gets 0$
+\ForAll{$k \in K$}
+    \State $E_k \gets \{\, e \in E : \text{kind}(e) = k \,\}$
+    \State $s_k \gets \max_{e \in E_k} w[\text{severity}(e)]$
+        \Comment{worst severity for this kind, not the sum}
+    \State $d \gets d + s_k \cdot \bigl(1 + \gamma \ln |E_k|\bigr)$
+        \Comment{repeats grow sub-linearly}
+\EndFor
+\State $d \gets d \cdot \min\bigl(\kappa,\; 1 + \sigma\,(|K| - 1)\bigr)$
+    \Comment{distinct kinds co-occurring are worse than one kind repeating}
+\State $\text{integrity} \gets \max\bigl(0, \min(100, \text{round}(100 - d))\bigr)$
+\Statex
+\If{$\text{integrity} < \tau_{\text{fail}}$} \Comment{$\tau_{\text{fail}} = 55$}
+    \State \Return $(\text{integrity},\ \textsc{flag})$
+\ElsIf{$\text{integrity} \geq 80$ \textbf{and} no $e \in E$ is \textsc{critical}}
+    \State \Return $(\text{integrity},\ \textsc{clean})$
+\Else
+    \State \Return $(\text{integrity},\ \textsc{review})$
+\EndIf
+\end{algorithmic}
+\end{algorithm}
+
+% ---------------------------------------------------------------------------
+% Prose for the body text. Three design decisions are worth stating explicitly,
+% because each one replaced an earlier rule that produced a wrong ordering.
+%
+% (1) Worst-severity-per-kind, not a sum over events. Summing every event lets
+%     a long run of one low-severity signal outweigh a single critical one. The
+%     shipped rule takes the worst severity observed for each distinct kind and
+%     then adds a sub-linear term for how often that kind recurred, so
+%     persistence still counts but cannot dominate.
+%
+% (2) The logarithmic repeat term. With gamma = 1.0, the n-th occurrence of a
+%     kind contributes s_k * ln(n) beyond the first. Six no-face events are
+%     therefore materially worse than one, without six being six times one.
+%
+% (3) The co-occurrence multiplier. Independent evidence types appearing
+%     together is stronger evidence than any one type repeating, so the
+%     deduction is scaled by 1 + 0.25(|K| - 1), capped at 2.0. The cap exists
+%     so that a candidate with many distinct minor signals cannot be scored
+%     below one with a single critical signal.
+%
+% Resolved defect, for the limitations/validity discussion: an earlier version
+% of this function halved the deduction for repeated events, which inverted the
+% ordering. Six no-face events scored 79 (review) while a candidate with a
+% phone, visible notes, a second voice and two off-screen glances scored 86
+% (clean) — the more serious case scored higher. An intermediate draft using
+% bounded saturation scored a fully-absent candidate 88 (clean), which was also
+% wrong. The rule above is the third version, and metrics/m1_integrity.py now
+% checks monotonicity over 39 cumulative event sequences: adding an event must
+% never raise the score. The paper should describe this as a resolved defect
+% with the re-audit attached, not as an open limitation.

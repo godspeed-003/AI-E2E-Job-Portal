@@ -1,0 +1,6 @@
+role_id,title,requirements,step_size_percent,achievable_scores,min_matches_to_pass_tau
+amazon_data_engineer,Junior Data Engineer,5,20.0,0; 20; 40; 60; 80; 100,2
+amazon_backend_dev,Backend Developer,5,20.0,0; 20; 40; 60; 80; 100,2
+deloitte_hr,HR Associate,3,33.33,0; 33; 67; 100,2
+deloitte_marketing,Marketing Executive,4,25.0,0; 25; 50; 75; 100,2
+deloitte_operations,Operations Coordinator,3,33.33,0; 33; 67; 100,2

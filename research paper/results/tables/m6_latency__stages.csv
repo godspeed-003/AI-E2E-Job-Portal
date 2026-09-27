@@ -1,0 +1,26 @@
+stage,n,p50_ms,p95_ms,mean_ms,min_ms,max_ms,note
+pdf_text_extraction,10,51.0272,51.3436,50.8362,49.6906,51.427,"pymupdf on a real 812 KB, 9-page PDF (this paper's own draft — the only real PDF checked into the repo)"
+clean_text,40,0.06,0.0606,0.0601,0.0595,0.0632,546 chars
+ats_score,40,0.097,0.1484,0.1041,0.0935,0.169,"5 requirements, 546 chars"
+ats_score_long_resume,40,0.373,0.4227,0.3784,0.3684,0.4505,3276 chars — the pre-filter scales linearly
+word_count,40,0.0029,0.0033,0.003,0.0028,0.0036,
+sha256_of_resume,40,0.0022,0.0023,0.0022,0.0021,0.0024,dedup / tamper-evidence hash stored on the application row
+strip_injections_clean,40,0.0828,0.0835,0.083,0.0824,0.0864,5 regex families over a clean resume
+strip_injections_hostile,40,0.104,0.1049,0.1041,0.1033,0.1061,same resume with two injection payloads appended
+sanitize_resume,40,0.1057,0.1078,0.1064,0.1053,0.1235,
+check_answer_tier1,40,0.0542,0.0688,0.0585,0.0536,0.1428,tier 1 only. Tier 2 adds one model round trip and is the only path on which a candidate's answer leaves the process.
+compute_integrity_score_0_events,40,0.0009,0.001,0.0009,0.0008,0.0011,0 proctoring events
+compute_integrity_score_10_events,40,0.0053,0.0231,0.0087,0.0048,0.0878,10 proctoring events
+compute_integrity_score_50_events,40,0.0183,0.0225,0.0194,0.0175,0.0459,50 proctoring events
+compute_integrity_score_200_events,40,0.0676,0.068,0.0676,0.067,0.0702,200 proctoring events
+rank_10_candidates,40,0.0368,0.0371,0.0369,0.0366,0.0393,fused S_final over 10 applications
+rank_100_candidates,40,0.3726,0.513,0.3971,0.3698,0.6637,fused S_final over 100 applications
+final_score_single,200,0.0006,0.0007,0.0006,0.0006,0.0008,one candidate — the arithmetic the ranking is built from
+hash_password_scrypt,8,119.3535,120.8709,119.4979,118.5896,121.5135,scrypt n=2^15 r=8 p=1 dklen=32 — a deliberate cost. At this work factor an offline attacker is bounded by the same arithmetic the login is.
+verify_password_scrypt,8,119.3121,120.9693,119.5223,118.5837,121.3856,constant-time comparison via hmac.compare_digest
+hash_session_token_sha256,200,0.0011,0.0015,0.0012,0.001,0.0027,runs on every authenticated request; sha256 rather than scrypt because the token already has 256 bits of entropy and needs no stretching
+register_candidate,6,120.9168,122.9521,121.1106,119.4342,123.1816,"dominated by the scrypt KDF above, plus one INSERT"
+apply_no_model,15,0.4524,0.5041,0.4633,0.44,0.5223,"sanitise + keyword score + INSERT. Runs with no network call at all, which is why a throttled provider can never lose a candidate's submission."
+screen_fake_model,15,0.5056,0.73,0.5597,0.481,0.7823,"prompt construction + JSON parse + rubric normalisation + UPDATE, with the provider stubbed. Add the model's own latency for a real figure."
+fused_for_role_query,15,0.0596,0.0633,0.0602,0.0592,0.0636,the LEFT JOIN plus S_final over every application on the role
+ranked_for_role_query,15,0.1698,0.1767,0.1712,0.1685,0.1825,"the shipped resume-only ORDER BY, for comparison"

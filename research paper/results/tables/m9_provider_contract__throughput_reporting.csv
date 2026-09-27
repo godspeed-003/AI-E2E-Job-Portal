@@ -1,0 +1,4 @@
+provider,token_counts,generation_time,tokens_per_second_derivable
+ollama,"prompt_eval_count, eval_count","prompt_eval_duration, eval_duration (ns)",True
+gemini,"promptTokenCount, candidatesTokenCount",not reported,False
+openai_compat,"prompt_tokens, completion_tokens",not in the chat-completions schema,False

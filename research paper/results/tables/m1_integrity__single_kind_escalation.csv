@@ -1,0 +1,5 @@
+severity,weight,leaves_clean,reaches_flag,reaches_zero,minutes_of_signal_to_reach_flag
+critical,12.0,1,17,1469,1.1
+high,6.0,12,723,,48.2
+medium,3.0,342,,,
+low,1.0,,,,

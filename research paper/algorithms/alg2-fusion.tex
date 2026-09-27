@@ -1,0 +1,67 @@
+% Algorithm 2 — trust-weighted fusion and ranking.
+% Source of truth: core/ranking.py :: build, rank, resume_only_rank
+% Constants verified against the running system on 2026-09-27:
+%   DEFAULT_INTERVIEW_WEIGHT = 0.5  (lambda)
+% Exercised by metrics/m5_fusion_audit.py (the audit) and
+% metrics/m10_stability.py (the lambda sweep and the across-seed intervals).
+%
+% Requires: \usepackage{algorithm} \usepackage{algpseudocode}
+
+\begin{algorithm}[t]
+\caption{Trust-weighted fusion and ranking}
+\label{alg:fusion}
+\begin{algorithmic}[1]
+\Require Applications $A$; for each $a \in A$ a resume score $s^{\text{res}}_a$,
+         an interview score $s^{\text{int}}_a$, an integrity score
+         $I_a \in [0,100]$, and a keyword score $\text{ats}_a$;
+         interview weight $\lambda \in [0,1]$
+\Ensure  $A$ ordered by fused score, ties broken deterministically
+\Statex
+\ForAll{$a \in A$}
+    \State $t_a \gets I_a / 100$
+        \Comment{trust \emph{is} integrity; no separate calibration}
+    \State $v_a \gets t_a \cdot s^{\text{int}}_a + (1 - t_a) \cdot s^{\text{res}}_a$
+        \Comment{evidence: interview discounted by how much it can be trusted}
+    \State $s^{\text{fin}}_a \gets (1-\lambda)\, s^{\text{res}}_a + \lambda\, v_a$
+    \State $\text{shift}_a \gets \text{rank}_{\text{resume-only}}(a) - \text{rank}_{\text{fused}}(a)$
+\EndFor
+\Statex
+\State \Return $A$ sorted by
+       $\bigl(-s^{\text{fin}}_a,\; -s^{\text{res}}_a,\; -\text{ats}_a,\;
+       \text{id}_a\bigr)$
+\end{algorithmic}
+\end{algorithm}
+
+% ---------------------------------------------------------------------------
+% Prose for the body text.
+%
+% Substituting the trust term gives the closed form
+%
+%     s_final = (1 - lambda) * s_resume
+%             + lambda * [ t * s_interview + (1 - t) * s_resume ]
+%
+% so an untrusted interview (t -> 0) collapses the fused score back onto the
+% resume score rather than onto zero. This is the property the design turns on:
+% a flagged proctoring session must not be able to *penalise* a candidate
+% numerically, only to stop the interview from *helping* them. Penalising on
+% integrity would make an automated integrity false positive a rejection, which
+% is the single most damaging failure this system can have. Instead the verdict
+% is surfaced to the recruiter and the score falls back to evidence the
+% candidate can read.
+%
+% The four-key tiebreak is not cosmetic. With a shared llm_score across much of
+% the cohort, ranking on the fused score alone leaves the order dependent on
+% dict insertion, and it moved 83 positions in a 100-candidate cohort before
+% the id_a key was added. Any reported MRR or precision@k is meaningless
+% without it, so the key belongs in the paper's description of the method.
+%
+% On lambda: 0.5 is the shipped default and the paper must present lambda as a
+% sensitivity analysis with no recommended value. metrics/m10_stability.py
+% sweeps it and reports peak rank correlation tau_b = 0.790 at lambda = 0.95
+% against 0.547 at the shipped 0.5. That is a diagnostic, NOT a tuning
+% recommendation: the sweep optimises agreement with the constructed cohort's
+% concealed ground truth, and tuning a hiring weight against a synthetic
+% ground truth would be exactly the overfitting the paper warns about. The
+% honest statement is that the argmax never fell below 0.8 across seeds, which
+% says the interview signal carries information, and nothing about what lambda
+% a deployment should use.

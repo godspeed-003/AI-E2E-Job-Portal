@@ -11,6 +11,7 @@ session so timers do not bleed across candidates.
 
 from __future__ import annotations
 
+import math
 import time
 from dataclasses import dataclass, field
 from typing import Any
@@ -304,36 +305,94 @@ class RuleEngine:
 
 # ── integrity scoring ─────────────────────────────────────────────────────── #
 
+# How a repeated kind's cost grows. A kind costs its worst severity scaled by
+# ``1 + REPEAT_GROWTH · ln(n)``: sublinear, so the first occurrence dominates
+# and the twentieth barely moves the needle, but a signal that never stops does
+# eventually cost enough to matter. Same sublinear shape as term-frequency
+# scaling, for the same reason — the first observation is informative and the
+# hundredth is nearly redundant.
+REPEAT_GROWTH = 1.0
+
+# Each additional *distinct* kind beyond the first scales the whole deduction by
+# this much, capped. Distinct kinds co-occurring is the discriminator the
+# per-event sum was missing: a broken camera produces one kind many times, a
+# coached candidate produces several kinds once each.
+CO_OCCURRENCE_STEP = 0.25
+CO_OCCURRENCE_CAP = 2.0
+
+
 def compute_integrity_score(events: list[dict[str, Any]]) -> tuple[int, str]:
     """Aggregate persisted event rows into a 0–100 score and a verdict.
 
-    The score starts at 100 and has weighted deductions subtracted; it is
-    clamped to 0. Repeats of the same *kind* compound with diminishing returns —
-    the first costs full weight, every later one costs half — so a candidate on
-    a flaky webcam that drops six no-face events is not punished as if six
-    separate things went wrong, while a genuinely repeated signal still climbs.
+    The score starts at 100 and has a weighted deduction subtracted, clamped to
+    0. The deduction is built per *distinct kind*, not per event:
+
+    1. **Worst severity wins.** A kind costs the weight of the most severe
+       reading of it, not the sum of its readings. One signal that fired eleven
+       times is still one thing that went wrong.
+    2. **Persistence grows sublinearly.** Repeats scale that weight by
+       ``1 + REPEAT_GROWTH · ln(n)``. The second occurrence of a kind costs
+       about seven tenths of the first, the tenth about a tenth of it. A flaky
+       webcam dropping six no-face events is not treated as six separate
+       findings, but a candidate who turns the camera to the wall for the whole
+       interview does not score the same as one who blocks it for four seconds.
+    3. **Co-occurring kinds escalate.** Each distinct kind beyond the first
+       scales the whole deduction by ``CO_OCCURRENCE_STEP``, capped at
+       ``CO_OCCURRENCE_CAP``. Independent anomaly types appearing together is
+       qualitatively different evidence from one type repeating, and this is the
+       only term that distinguishes them.
 
     A single ``critical`` event (candidate substitution) never scores ``clean``:
     its weight alone leaves the score in the eighties, but the whole point of
     that signal is that a human should look at the recording. It floors the
     verdict at ``review`` regardless of the arithmetic.
 
+    Why it is shaped this way
+    -------------------------
+
+    The first version accumulated a deduction per event, halving repeats of the
+    same kind. Halving softened a repeated signal without bounding it, so the
+    total tracked how *many* events fired rather than how serious the distinct
+    signals were, and it inverted the two orderings the design exists to get
+    right: six no-face events from a failing webcam scored 79 and were sent for
+    human review, while a candidate with a phone, written notes, another voice
+    in the room and two glances away scored 86 and was marked clean.
+
+    Scoring each kind at its worst severity fixes that ordering, but on its own
+    it makes persistence almost free and the label trivially gameable — an
+    earlier draft of this function used a bounded saturation term and scored a
+    candidate absent from frame for the entire interview at 88/``clean``, which
+    is a worse defect than the one being repaired. Terms 2 and 3 are what make
+    the fix safe: sustained absence lands in ``review``, which is the honest
+    verdict for a signal that cannot distinguish a broken camera from an empty
+    chair. ``metrics/m1_integrity.py`` re-runs the monotonicity sweep and both
+    hand-constructed scenarios against this function and reports whether the
+    inversion still reproduces, so the repair is a measurement and not a claim.
+
     Verdict labels are ``clean``, ``review``, or ``flag``.
     """
-    deduction = 0.0
-    seen: set[str] = set()
+    worst: dict[str, float] = {}
+    counts: dict[str, int] = {}
     has_critical = False
 
     for row in events:
         severity = row.get("severity", "low")
-        weight = SEVERITY_WEIGHTS.get(severity, 1.0)
         kind = row.get("kind", "")
-        if kind in seen:
-            weight /= 2.0
-        seen.add(kind)
-        deduction += weight
+        weight = SEVERITY_WEIGHTS.get(severity, 1.0)
+        worst[kind] = max(worst.get(kind, 0.0), weight)
+        counts[kind] = counts.get(kind, 0) + 1
         if severity == "critical":
             has_critical = True
+
+    deduction = 0.0
+    for kind, weight in worst.items():
+        deduction += weight * (1.0 + REPEAT_GROWTH * math.log(counts[kind]))
+
+    distinct = len(worst)
+    if distinct > 1:
+        deduction *= min(
+            CO_OCCURRENCE_CAP, 1.0 + CO_OCCURRENCE_STEP * (distinct - 1)
+        )
 
     score = max(0, min(100, round(100 - deduction)))
     threshold = settings.proctoring.integrity_fail_below

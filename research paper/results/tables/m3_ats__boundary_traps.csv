@@ -1,0 +1,27 @@
+resume_fragment,requirement,expected_match,actual_match,correct,score,rationale
+Built services in Python and Go.,Python,True,True,True,100,exact word
+Experienced with PYTHON 3.12,python,True,True,True,100,case-insensitive
+Strong C++ background,C++,True,True,True,100,plus signs preserved by _NORMALIZE_RE
+Wrote tooling in C#,C#,True,True,True,100,hash preserved
+Node.js and Express,node.js,True,True,True,100,dot preserved
+Worked on system\ndesign reviews,system design,True,True,True,100,whitespace in a requirement matches a newline
+"Skills: SQL, ETL, Pandas",ETL,True,True,True,100,comma-separated list
+Deep AWS experience,AWS basics,False,False,True,0,"multi-word requirement is matched literally, not per-token"
+I use pandas daily,Pandas,True,True,True,100,case-insensitive
+"REST APIs, gRPC",gRPC,True,True,True,100,mixed case
+Kubernetes (k8s) operator work,Kubernetes,True,True,True,100,parenthesis is a separator
+machine-learning pipelines,machine learning,True,True,True,100,hyphen normalises to a space
+Ten years of JavaScript,Java,False,False,True,0,java is a prefix of javascript
+Golang microservices,Go,False,False,True,0,go is a prefix of golang
+I work at Google,Go,False,False,True,0,go is a prefix of google
+"C++ only, no plain C work",C,False,True,False,100,the lookbehind/lookahead must stop C matching inside C++
+Scalable architectures,Scala,False,False,True,0,scala is a prefix of scalable
+Used TypeScript throughout,Type,False,False,True,0,type is a prefix of typescript
+Redshift warehouse,Redis,False,False,True,0,shares a prefix only
+Kotlin Android apps,Java,False,False,True,0,no textual overlap at all
+Reactive streams with RxJava,React,False,False,True,0,react is a prefix of reactive
+Postgres tuning,Postman,False,False,True,0,"different tool, shared prefix"
+Expert in PostgreSQL,SQL,True,False,False,0,"matches only because 'sql' is a suffix boundary in postgresql — accidental, and worth reporting as such"
+Deep experience with relational databases,SQL,False,False,True,0,a synonym; the matcher is literal by design and will not find it
+Shipped ML models to production,machine learning,False,False,True,0,an abbreviation the matcher cannot expand
+Wrote Terraform modules,Infrastructure as Code,False,False,True,0,"a concept, not a keyword"

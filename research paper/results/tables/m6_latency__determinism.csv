@@ -1,0 +1,5 @@
+key,value
+ats_score,True
+strip_injections,True
+compute_integrity_score,True
+rank,True

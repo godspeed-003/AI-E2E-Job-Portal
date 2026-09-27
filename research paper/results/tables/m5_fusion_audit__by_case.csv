@@ -1,0 +1,5 @@
+key,n,mean_delta_rank,ci95_delta_rank,median_delta_rank,moved_correctly,rate,description
+A_over_seller,25,24.48,"[21.48, 27.52]",23.0,25,1.0,"Inflated resume, low competence. Claims every requirement, cannot support any of it under questioning."
+B_hidden_gem,25,-21.4,"[-24.52, -18.24]",-21.0,25,1.0,"Terse resume, high competence. Understates their experience; the interview is where the evidence appears."
+C_honest_strong,25,-10.6,"[-13.68, -7.64]",-11.0,9,0.36,"Resume and interview agree, both strong."
+D_honest_weak,25,7.52,"[4.6, 10.48]",7.0,10,0.4,"Resume and interview agree, both weak."

@@ -1,0 +1,5 @@
+case,n,mean_places_moved_up,ci95_low,ci95_high,moved_up,moved_down,unmoved,sign_test_p,direction_significant_at_0.05
+A_over_seller,25,-24.48,-27.52,-21.52,0,25,0,5.96e-08,True
+B_hidden_gem,25,21.4,18.2,24.48,25,0,0,5.96e-08,True
+C_honest_strong,25,10.6,7.68,13.68,25,0,0,5.96e-08,True
+D_honest_weak,25,-7.52,-10.48,-4.6,4,21,0,9.11e-04,True

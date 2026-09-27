@@ -1,0 +1,6 @@
+module,line,schema_constrained
+services/application_service.py,417,True
+services/guardrail_service.py,276,True
+services/interview_service.py,835,False
+services/interview_service.py,1305,False
+services/interview_service.py,1549,False

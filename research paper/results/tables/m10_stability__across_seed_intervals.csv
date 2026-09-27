@@ -1,0 +1,11 @@
+quantity,shipped_seed_value,mean_across_seeds,ci95_low,ci95_high,width,min,max,shipped_inside_ci
+tau_b_resume_only,0.1701,0.1986,0.1268,0.2744,0.1476,0.0796,0.2921,True
+tau_b_fused,0.5471,0.5812,0.5308,0.6315,0.1007,0.5075,0.6469,True
+tau_b_gain,0.377,0.3826,0.3333,0.4388,0.1055,0.3156,0.4501,True
+ndcg_resume_only,0.6087,0.6699,0.5008,0.8357,0.3349,0.4222,0.8882,True
+ndcg_fused,0.944,0.9553,0.9207,0.98,0.0593,0.9029,0.9852,True
+ndcg_gain,0.3353,0.2855,0.1257,0.4514,0.3257,0.0672,0.4916,True
+precision_resume_only,0.3,0.3145,0.1,0.5,0.4,0.0,0.6,True
+precision_fused,0.5,0.4935,0.3,0.7,0.4,0.2,0.8,True
+mrr_resume_only,0.5,0.5578,0.1429,1.0,0.8571,0.0769,1.0,True
+mrr_fused,1.0,0.9087,0.3333,1.0,0.6667,0.25,1.0,True

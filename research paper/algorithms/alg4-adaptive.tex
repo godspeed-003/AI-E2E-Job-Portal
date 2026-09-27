@@ -1,0 +1,103 @@
+% Algorithm 4 — adaptive interview turn selection.
+% Source of truth: services/interview_service.py :: _decide
+% Constants verified against the running system on 2026-09-27:
+%   MAX_CONSECUTIVE_ADAPTIVE = 2, MAX_REJECTS_PER_TURN = 3
+%   CRITERIA = 5 dimensions x 5 points = 25 total
+% SPECIFICATION ONLY — see the honesty note at the end of this file and in
+% algorithms/README.md. The bounds are unit-tested; the question quality is not
+% measured.
+%
+% Requires: \usepackage{algorithm} \usepackage{algpseudocode}
+% If this overflows a column, promote to \begin{algorithm*} ... \end{algorithm*}.
+
+\begin{algorithm}[t]
+\caption{Adaptive interview turn selection}
+\label{alg:adaptive}
+\begin{algorithmic}[1]
+\Require Plan $Q$ (planned questions); asked turns $T$;
+         turns remaining $r$; wall-clock budget;
+         $\mu = 2$ (max consecutive adaptive), $\rho = 3$ (max rejects/turn)
+\Ensure  An action in \{\textsc{planned}, \textsc{probe}, \textsc{steer},
+         \textsc{wrapUp}\}
+\Statex
+\Statex \textbf{Bounds first: the model is never asked whether to stop}
+\If{$r \leq 0$ \textbf{or} out of time}
+    \State \Return \textsc{wrapUp}
+\EndIf
+\If{$T = \emptyset$}
+    \State \Return \textsc{planned} \Comment{open on a planned question}
+\EndIf
+\State $R \gets Q \setminus \{\text{asked}\}$ \Comment{unasked planned questions}
+\If{$R = \emptyset$}
+    \State \Return \textsc{wrapUp}
+\EndIf
+\If{$|R| \geq r$}
+    \State \Return \textsc{planned}
+        \Comment{no budget left to spend on adaptation}
+\EndIf
+\If{$\textsc{TrailingAdaptive}(T) \geq \mu$}
+    \State \Return \textsc{planned} \Comment{at most $\mu$ in a row}
+\EndIf
+\If{$\text{last}(T).\text{wasForced}$}
+    \State \Return \textsc{planned}
+        \Comment{a forced turn does not seed a follow-up}
+\EndIf
+\Statex
+\Statex \textbf{Only now is the model consulted}
+\State $F \gets \textsc{FreshTopics}(Q, T)$
+\State $d \gets \textsc{ModelDecision}(F, T)$
+    \Comment{schema-constrained: action $+$ source}
+\If{$d = \bot$}
+    \Comment{provider unreachable, throttled, or reply off-schema}
+    \State $d \gets \textsc{OfflineDecision}(F, T)$
+        \Comment{deterministic fallback; the interview always continues}
+\EndIf
+\State \Return $d$
+\end{algorithmic}
+\end{algorithm}
+
+% ---------------------------------------------------------------------------
+% Prose for the body text.
+%
+% The ordering of the guards is the design. Every terminating condition --
+% turns exhausted, clock exhausted, plan exhausted, plan coverage at risk,
+% too many consecutive adaptive questions, a forced previous turn -- is decided
+% before the model is consulted. The model chooses only *which* follow-up to
+% ask among fresh topics, never whether the interview should continue, how long
+% it should run, or whether the candidate has had enough questions. A model
+% that malfunctions or is adversarially steered can therefore make the
+% interview less insightful, but it cannot make it unbounded, cannot truncate
+% it early, and cannot deny a candidate the planned questions their score will
+% be computed from.
+%
+% The MAX_CONSECUTIVE_ADAPTIVE = 2 bound exists to guarantee plan coverage: the
+% scoring rubric has five dimensions and the planned questions are what cover
+% them, so unbounded follow-up on one thread would produce a score with
+% dimensions that were never probed. MAX_REJECTS_PER_TURN = 3 (Algorithm 3)
+% bounds the other direction: a candidate whose answers keep tripping the
+% guardrail spends retries, not turns.
+%
+% The try/except is a stated availability property, not defensive clutter: when
+% the provider is unreachable or rate-limited, _offline_decision returns a
+% deterministic choice and the interview proceeds. Combined with the
+% deterministic pre-filter and the deterministic fusion step, this is what
+% supports the paper's claim that a throttled provider delays a decision but
+% never loses a submission.
+%
+% ---------------------------------------------------------------------------
+% HONESTY NOTE -- read before citing this algorithm in a results section.
+%
+% This is a specification, not a result. What IS verified: the control flow
+% above is read directly from _decide, and the bounds it enforces are covered
+% by the unit test suite (371 tests passing as of 2026-09-27).
+%
+% What is NOT measured: whether adaptive follow-ups elicit better evidence than
+% a fixed question list. That needs either a real multi-turn run against a live
+% model over the full cohort, or human raters judging the transcripts, and
+% neither has been done. The ablation ladder that would answer it (fixed plan
+% vs. adaptive, with everything else held constant) is listed as an outstanding
+% requirement in research paper/results/unavailable.md.
+%
+% Do not attach an effectiveness claim to this algorithm. Describe it in the
+% methods section as the mechanism, and say plainly in the limitations that its
+% contribution to score quality is unmeasured.

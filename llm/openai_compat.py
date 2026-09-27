@@ -119,12 +119,21 @@ class OpenAICompatProvider(LLMProvider):
         if not text:
             raise LLMError("upstream returned an empty message")
 
+        usage = payload.get("usage") or {}
         return LLMResult(
             text=text,
             provider=self.name,
             model=self.model,
             latency_seconds=time.time() - started,
-            tokens=(payload.get("usage") or {}).get("total_tokens"),
+            tokens=usage.get("total_tokens"),
+            prompt_tokens=usage.get("prompt_tokens"),
+            output_tokens=usage.get("completion_tokens"),
+            # The OpenAI chat-completions schema carries token counts but no
+            # server-side generation time, so tokens/sec is not derivable here.
+            # llama.cpp and vLLM both add their own timing fields under
+            # different names; deriving throughput from wall-clock instead would
+            # fold transport and queueing into a number the paper would read as
+            # model speed.
             raw=payload,
         )
 

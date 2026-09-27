@@ -24,6 +24,7 @@ from functools import lru_cache
 from typing import Any
 
 from core import db
+from core import ranking
 from core import resume as resume_core
 from core.config import settings
 from llm import get_llm
@@ -182,6 +183,40 @@ def ranked_for_role(role_id: str, *, include_sandbox: bool = False) -> list[Appl
         sql += " AND is_sandbox = 0"
     sql += " ORDER BY llm_score DESC, ats_score DESC, created_at ASC"
     return [_to_application(row) for row in db.query(sql, (role_id,))]
+
+
+def fused_for_role(
+    role_id: str,
+    *,
+    include_sandbox: bool = False,
+    interview_weight: float | None = None,
+) -> list[ranking.RankedCandidate]:
+    """Candidates for a role ranked by ``S_final`` — resume *and* interview.
+
+    :func:`ranked_for_role` above is the shipped ordering and stays exactly as
+    it was, because it is what the candidate-facing status copy and 57 screening
+    tests describe. This is the fused ordering from :mod:`core.ranking`: it
+    joins the interview and its integrity score, so an interview that
+    contradicts a resume can actually move someone.
+
+    Both are exposed on purpose. A recruiter switching between them sees which
+    candidates the interview moved and by how much, which is more informative
+    than either list alone — and it is the comparison the evaluation reports.
+    """
+    sql = (
+        "SELECT a.id AS application_id, a.candidate_name, a.llm_score, a.max_score, "
+        "       a.ats_score, "
+        "       i.status AS interview_status, i.total_score, i.max_total_score, "
+        "       i.integrity_score, i.integrity_verdict "
+        "FROM applications a "
+        "LEFT JOIN interviews i ON i.application_id = a.id "
+        "                      AND i.status = 'completed' "
+        "WHERE a.role_id = ?"
+    )
+    if not include_sandbox:
+        sql += " AND a.is_sandbox = 0"
+    rows = [db.row_to_dict(row) for row in db.query(sql, (role_id,))]
+    return ranking.rank(rows, interview_weight=interview_weight)
 
 
 def for_company(company_id: str, *, include_sandbox: bool = False) -> list[Application]:

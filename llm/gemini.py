@@ -39,12 +39,33 @@ _ALLOWED_SCHEMA_KEYS = {
 
 
 def sanitize_schema(schema: Any) -> Any:
+    """Strip keywords Gemini rejects, without stripping the caller's field names.
+
+    The allow-list applies to *schema keywords* only. Inside ``properties`` the
+    dictionary keys are the caller's own field names — ``safe``, ``reason``,
+    ``total_score`` — and filtering those against a keyword list deletes every
+    one of them, leaving ``properties: {}`` next to a ``required`` list naming
+    fields that no longer exist. Gemini answers that with
+
+        HTTP 400 … response_schema.required[0]: property is not defined
+
+    which is what this function did to every object schema in the codebase
+    before the ``properties`` branch below existed. ``tests/test_llm_gemini.py``
+    pins the shape; ``metrics/m9_provider_contract.py`` re-checks it against the
+    live API so a change in Gemini's dialect shows up as a measurement rather
+    than as a support ticket.
+    """
     if isinstance(schema, dict):
         cleaned: dict[str, Any] = {}
         for key, value in schema.items():
             if key not in _ALLOWED_SCHEMA_KEYS:
                 continue
-            cleaned[key] = sanitize_schema(value)
+            if key == "properties" and isinstance(value, dict):
+                cleaned[key] = {
+                    name: sanitize_schema(sub) for name, sub in value.items()
+                }
+            else:
+                cleaned[key] = sanitize_schema(value)
         return cleaned
     if isinstance(schema, list):
         return [sanitize_schema(item) for item in schema]
@@ -139,17 +160,87 @@ class GeminiProvider(LLMProvider):
             raise LLMUnavailable(f"Gemini HTTP {response.status_code}")
         if response.status_code == 400 and "API key not valid" in response.text:
             raise LLMError("Gemini rejected the API key — check GEMINI_API_KEY in .env")
+        if response.status_code == 404:
+            raise LLMError(self._model_gone_message(response.text))
         if response.status_code != 200:
             raise LLMError(f"Gemini HTTP {response.status_code}: {response.text[:300]}")
 
         payload = response.json()
+        usage = payload.get("usageMetadata", {})
         return LLMResult(
             text=self._first_text(payload),
             provider=self.name,
             model=self.model,
             latency_seconds=time.time() - started,
-            tokens=payload.get("usageMetadata", {}).get("totalTokenCount"),
+            tokens=usage.get("totalTokenCount"),
+            prompt_tokens=usage.get("promptTokenCount"),
+            output_tokens=usage.get("candidatesTokenCount"),
+            # Gemini reports no server-side generation time, so tokens/sec is
+            # not derivable for this provider and is left unset rather than
+            # computed from wall-clock, which would silently include the
+            # round trip to Google.
             raw=payload,
+        )
+
+    def _model_gone_message(self, body: str) -> str:
+        """Turn a 404 into something the operator can act on.
+
+        A 404 from ``generateContent`` means the model path does not exist for
+        this key, and hosted model names are retired on Google's schedule rather
+        than ours: ``gemini-2.5-flash`` was this project's default until it began
+        answering every call with *"no longer available to new users"*, three days
+        after it last produced a measurement. That is the failure a reader
+        reproducing this work months later will hit first, so the error names the
+        models that *do* answer instead of leaving them a bare status code.
+
+        Discovery is best-effort and never masks the original 404: one extra GET,
+        and if it fails for any reason the caller still gets Google's own message.
+        The listing is also not proof of callability — it advertised
+        ``gemini-2.5-flash`` for days after that model stopped answering — so the
+        wording says "advertises", not "supports".
+        """
+        detail = " ".join(body.split())[:300]
+        message = (
+            f"Gemini has no model '{self.model}' for this API key (HTTP 404). "
+            f"Google's reply: {detail}"
+        )
+        try:
+            response = self._session.get(
+                f"{self.api_base}/models",
+                headers={"x-goog-api-key": self._key},
+                timeout=min(self.timeout, 20),
+            )
+            if response.status_code != 200:
+                return message
+            names = [
+                str(entry.get("name", "")).removeprefix("models/")
+                for entry in response.json().get("models", [])
+                if "generateContent" in (entry.get("supportedGenerationMethods") or [])
+            ]
+        except Exception:  # discovery is a courtesy, not a contract
+            return message
+
+        flash = [
+            name
+            for name in sorted(set(names), reverse=True)
+            if name
+            # Never suggest the model that just failed. The listing advertised
+            # gemini-2.5-flash for days after it stopped answering, so without
+            # this the message recommends the exact name the operator is already
+            # using — the least useful advice available.
+            and name != self.model
+            # Text generation only: the -image and -tts variants answer
+            # generateContent but not with the JSON this project asks for.
+            and "flash" in name
+            and not any(tag in name for tag in ("image", "tts", "audio", "thinking"))
+        ]
+        if not flash:
+            return message
+        return (
+            f"{message} Set GEMINI_MODEL in .env to a model this key advertises — "
+            f"{len(set(names))} support generateContent, including: "
+            f"{', '.join(flash[:6])}. "
+            "Being listed is not proof of callability; confirm with one real call."
         )
 
     @staticmethod

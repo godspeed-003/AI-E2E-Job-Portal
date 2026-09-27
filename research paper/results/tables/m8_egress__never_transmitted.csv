@@ -1,0 +1,7 @@
+key,value
+video_recording,"written to MEDIA_DIR, never attached to any request"
+enrollment_snapshot,local file; face matching runs in-process (MediaPipe/OpenCV)
+proctor_snapshots,"local files, paths only in the database"
+answer_audio,local files; transcription is faster-whisper in-process
+password_hash,never read by any provider code path
+session_tokens,"sha256-hashed at rest, never sent anywhere"

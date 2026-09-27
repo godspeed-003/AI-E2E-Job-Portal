@@ -44,6 +44,25 @@ class LLMResult:
     tokens: int | None = None
     raw: dict[str, Any] = field(default_factory=dict)
 
+    # Split counts and the server-reported generation time. ``latency_seconds``
+    # is wall-clock as seen by this process and includes queueing, transport and
+    # the model loading itself; it is the number a candidate waits through, but
+    # it is not a throughput denominator. Providers that report their own timing
+    # fill these in so tokens/sec can be quoted without conflating "the model
+    # generates at X" with "the network was busy". Left ``None`` by providers
+    # that report nothing — absent rather than guessed.
+    prompt_tokens: int | None = None
+    output_tokens: int | None = None
+    prompt_eval_seconds: float | None = None
+    eval_seconds: float | None = None
+
+    @property
+    def tokens_per_second(self) -> float | None:
+        """Output tokens per second of generation, or ``None`` if unreported."""
+        if not self.output_tokens or not self.eval_seconds:
+            return None
+        return self.output_tokens / self.eval_seconds
+
 
 # --------------------------------------------------------------------------- #
 # JSON handling

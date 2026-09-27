@@ -88,12 +88,22 @@ class OllamaProvider(LLMProvider):
 
         prompt_tokens = payload.get("prompt_eval_count") or 0
         output_tokens = payload.get("eval_count") or 0
+        # Ollama reports durations in nanoseconds. Keeping them is what makes
+        # tokens/sec reportable: wall-clock latency includes model load and
+        # transport, so dividing tokens by it understates the model and hides
+        # a cold start behind a throughput number.
+        prompt_ns = payload.get("prompt_eval_duration")
+        eval_ns = payload.get("eval_duration")
         return LLMResult(
             text=text,
             provider=self.name,
             model=self.model,
             latency_seconds=time.time() - started,
             tokens=(prompt_tokens + output_tokens) or None,
+            prompt_tokens=prompt_tokens or None,
+            output_tokens=output_tokens or None,
+            prompt_eval_seconds=(prompt_ns / 1e9) if prompt_ns else None,
+            eval_seconds=(eval_ns / 1e9) if eval_ns else None,
             raw=payload,
         )
 

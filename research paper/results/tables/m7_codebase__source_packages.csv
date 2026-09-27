@@ -1,0 +1,7 @@
+package,files,lines,code_lines,comment_and_blank_lines
+app.py,1,167,141,26
+core,7,1524,1188,336
+services,10,4225,3393,832
+llm,6,1102,901,201
+proctoring,5,1175,911,264
+scripts,4,2230,1827,403

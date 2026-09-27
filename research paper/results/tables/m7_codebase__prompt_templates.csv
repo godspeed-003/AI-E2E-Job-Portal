@@ -1,0 +1,6 @@
+template,bytes,lines,placeholders
+evaluation_prompt.txt,1038,54,{culture}; {job_description}; {requirements}; {resume_text}; {values}
+interview_next_turn.txt,2641,69,{answer}; {company_name}; {focus_area}; {job_description}; {planned_left}; {planned_next}; {question}; {requirements}; {role_title}; {topics_mentioned}; {topics}; {transcript}; {turns_left}
+interview_plan.txt,2998,87,{company_name}; {count}; {culture}; {gaps}; {job_description}; {matched_requirements}; {missing_requirements}; {requirements}; {resume_text}; {role_title}; {strengths}; {values}
+interview_score.txt,3084,70,{candidate_name}; {company_name}; {culture}; {flagged}; {job_description}; {requirements}; {role_title}; {transcript}
+resume_evaluation.txt,2645,70,{company_name}; {culture}; {job_description}; {missing_requirements}; {requirements}; {resume_text}; {role_title}; {values}

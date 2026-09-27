@@ -1,0 +1,6 @@
+case,safe,expected_safe,agrees,flags,expected_flag,tier,reason
+empty,False,False,True,empty,empty,structural,That answer came through empty. Please try again.
+too short,False,False,True,too_short,too_short,structural,Please give a fuller answer — around 12 words or more. That one was 3.
+injected,False,False,True,"instruction_override,score_demand",instruction_override,structural,That answer contains instructions aimed at the interviewer rather than an answer to the question. Please reply in your own words.
+on topic,True,True,True,low_overlap,,structural,Accepted; shares little wording with the question.
+off topic but fluent,True,True,True,low_overlap,low_overlap,structural,Accepted; shares little wording with the question.

@@ -1,0 +1,230 @@
+ROLE
+You are an IEEE paper editor and technical reviewer. You are revising an existing
+manuscript (Final_list_2026.pdf) in response to a 28-item review. You have the
+project files: metrics/*.py, results/tables/*.csv, results/results.json,
+core/*.py, prompts/*.txt, tasks.md, prd.md, README.md, SECURITY-AND-DATA-SAFETY.md,
+PAPER-REVISION-GUIDE.txt, related_sources_ai_recruitment.md, and the "References"
+file.
+
+HARD RULES (apply to every step)
+1. Never invent a number, citation, DOI, page range, venue, author, or date.
+   Every number in the paper must come from a file I supplied. If a number is not
+   in the files, write [NEEDS RUN: <exact command>] or [NEEDS SOURCE: <topic>]
+   in the text and list it in the "Open items" table at the end.
+2. Do not search the web. Use only the sources I supplied. For citations that the
+   review says are missing, use only sources in related_sources_ai_recruitment.md,
+   the "References" file, or the existing reference list. Where no supplied source
+   fits, insert [CITE-NEEDED: <tool/metric>] and list it. Do not substitute
+   another source because it seems better.
+3. "Verify" items: open the named file, quote what it says, and only then edit.
+   If the file contradicts my review, say so and follow the file.
+4. Keep every "simulated" scope statement. Do not strengthen any claim.
+5. Formatting: IEEE style, numeric citations [n] by order of first appearance,
+   one reference list, no commas in numbers of four or more digits (write 41798),
+   leading zeros on decimals, em-dash for ranges, Section headings as
+   "I. INTRODUCTION" with Roman numerals, equations in proper LaTeX math
+   (numbered), no raw "$$" or "\operatorname" in body text.
+6. Do not silently change meaning. Every edit goes in the change log.
+
+PHASE 0 - VERIFY BEFORE EDITING (report results in a table: claim | file checked |
+what the file says | action)
+ a. Empty-requirement convention: read core/resume.py ats_score and m3_ats.py.
+    Does ats_score(text, []) return 0 or 100? Make Section III-B match the code.
+ b. Keyword-filter failures: read m3_ats__trap_failures.csv and
+    m3_ats__boundary_traps.csv. Name the two actual misclassified cases and
+    their labels. Check whether the labels themselves are correct (for example
+    "C++ only, no plain C work" -> "C"; "Expert in PostgreSQL" -> "SQL").
+    Rewrite Section V-E to describe the real failures, and report any label
+    that looks wrong as a label issue rather than a matcher failure.
+ c. Control-case metric: read m5_fusion_audit__control_displacement.csv,
+    displaced_controls.csv, by_case.csv and m5_fusion_audit.py. Extract:
+    controls moved beyond tolerance, tolerance in positions, internal tau-b
+    before/after, pairs order preserved, pairs inverted. State exactly what the
+    0.62 measures and whether the code calls it an upper bound.
+ d. Egress: read m8_egress__by_provider.csv, per_call.csv,
+    tier2_moderation_request.csv, egress_scaling.csv. Reconcile the "57
+    intercepted requests" count by configuration (fake, gemini, ollama, scaling
+    run, per-call run, tier-2 call). If it cannot be reconciled from the files,
+    say so and mark it [NEEDS RUN: python -m metrics.run_all --only m8_egress].
+    Also state how many of the 14 calls are tier-2 guardrail calls and whether
+    that comes from the stub (see m8_egress.py comments).
+ e. Prompt-template count: read m7_codebase__prompt_templates.csv and grep the
+    services/ code for each template file. State which of the 5 templates are
+    actually loaded. Correct "five prompt templates" if one is unused.
+ f. Integrity in the audit: confirm make_cohort fixes integrity_score=100 and
+    read m5_fusion_audit__integrity_sensitivity.csv.
+ g. Shortlist floor: find shortlist_llm_score_min in core/config.py; give the
+    number for s_min.
+ h. Case counts: confirm 25 per case (100 total) and that "26 traps" refers to
+    the boundary-trap corpus, not the cohort.
+ i. Shipped default provider and whether any local (Ollama) inference was ever
+    run. Use the files' answer.
+ j. Uncertainty data: check whether results/tables contains the m10 across-seed
+    intervals, sign tests, and per-case bootstrap CIs. Use what exists; for what
+    does not, mark [NEEDS RUN: python -m metrics.run_all --only m10_stability].
+
+PHASE 1 - CRITICAL FIXES (review items 1-9)
+ 1. Circularity. Add a short, explicit statement (Abstract one clause,
+    Methodology, Discussion) that the cohort's resume inflation and the
+    unbiased-noisy interview model are assumptions of the generator, so the
+    results test the fusion function, not the interviewer. Remove the abstract
+    closing sentence "findings support treating interviews as independent
+    measurements"; replace it with a scoped statement about what the fusion
+    function does under the stated assumptions.
+ 2. Independence. Everywhere the interview is called "independent" or a "second,
+    independent measurement", change it to "an additional evidence source". In
+    Section III-D state that the question plan is conditioned on the resume and
+    screening gaps and that the same model family may screen and interview, and
+    carry this into Threats to Validity.
+ 3. The 0.62 metric. Use ONE name and ONE definition everywhere (Abstract,
+    Introduction, V-B, Conclusion): "control displacement rate: the share of
+    honest controls displaced by more than <tolerance from file> positions".
+    Delete "false correction rate" and "62% of rank changes were not
+    corrections". Report the decomposition from Phase 0c (pairs order
+    preserved / inverted, internal tau-b change). Delete or rewrite the phrase
+    "high-recall but imprecise" so it is only kept if the decomposition
+    supports it.
+ 4. Add a new section "IV. EVALUATION METHODOLOGY" (about 1 to 1.5 pages) covering:
+    the generator (competence bands per case, inflation, deflation, noise
+    values, seed, integrity fixed at 100, scores scaled to 0-25), how the
+    "simulated model score" baseline is produced, TF-IDF and BM25 definitions
+    and parameters (k1, b, smoothed idf, tokenizer), definitions of the
+    relevant set (top quartile by competence), NDCG@10, Kendall tau-b,
+    recovery rate, mean rank shift, the control displacement tolerance, the
+    guardrail and boundary-trap corpora (how labelled, by whom, sizes, hard
+    negatives), the egress interception method, latency method (warm-up,
+    repeats, p50/p95), and the five provenance labels (measured, derived,
+    specification, simulated, unavailable) with one sentence each. Take every
+    value from metrics/*.py; cite the file in the text only as "the released
+    harness".
+ 5. Structure and cross-references. Final order:
+    I Introduction; II Related Work; III Proposed System; IV Evaluation
+    Methodology; V Results; VI Discussion and Threats to Validity;
+    VII Limitations and Future Scope; VIII Conclusion; Ethics and Regulatory
+    Considerations (as a subsection of VI or VII); Acknowledgment (AI
+    disclosure); References. Rewrite the Introduction roadmap to match exactly.
+    Fix "Section V-B" self-references in Results and the III-H pointer.
+    Merge the current "Future Scope" into VII (do not duplicate it in the
+    Conclusion).
+ 6. Local model wording. In the Abstract, Introduction, V-G, VI and Conclusion,
+    state that the pipeline supports a local provider by configuration, that
+    the shipped default is hosted, and that no local-model inference was run:
+    the local egress figure is a loopback measurement with stubbed responses.
+    Replace "substituting a local model reduced the bytes leaving the host from
+    41798 to zero" with a wording that says the same payload is directed to a
+    loopback address under the local configuration and that zero is a
+    consequence of that routing.
+ 7. Egress scope. State the probe details (resume size, number of turns, stub
+    provider, tier-2 calls triggered by the stub) next to the "12 of 14 calls"
+    and "2 of 14 calls" figures, and say these counts describe one probe
+    journey, not a rate on real candidates. Delete the sentence admitting the
+    57 count is unreconciled; replace it with the reconciled count from
+    Phase 0d or remove the 57 figure and its claim.
+ 8. Literature coverage. Add subsections to II (keep each short, about 100 to
+    150 words) on: automated/video interviewing and LLM interview assessment,
+    LLM-as-judge and human agreement, rank fusion and IR evaluation metrics,
+    and proctoring/integrity monitoring. Use only supplied sources; where none
+    exists write [CITE-NEEDED: <topic>] and do not make claims from memory.
+    Restate the research gap strictly as "in the sources reviewed here".
+ 9. Missing citations. For each named item (Gale-Shapley, NDCG, Kendall
+    tau-b, BM25, TF-IDF, scrypt, faster-whisper, YuNet, SFace, MediaPipe,
+    YOLO11n/ultralytics, PyMuPDF, Streamlit, Ollama, Gemini), cite a supplied
+    source if one exists in my files; otherwise insert [CITE-NEEDED: name].
+    List them all in the Open items table.
+
+PHASE 2 - CORRECTNESS AND EVIDENCE (items 10-17)
+ 10. Apply Phase 0a.
+ 11. Apply Phase 0b.
+ 12. Pre-filter accuracy. Report accuracy separately for decidable-lexical
+     cases and for the three semantic probes, and state that the authors
+     labelled the semantic probes "no match" for a literal matcher, so they do
+     not test the matcher. Do not present 0.9231 as general matcher accuracy.
+ 13. Guardrail. Keep scope language: "detection rate on a self-authored corpus
+     of 31 attacks", never "resistance" or "security". State who wrote the
+     corpus.
+ 14. Integrity. Report the integrity-sensitivity table from
+     m5_fusion_audit__integrity_sensitivity.csv in Results, state that the
+     headline audit fixes integrity at 100, and say the collapse-to-resume
+     property is algebraic (from the fusion formula), with the measured check
+     labelled as a check of the implementation.
+ 15. Uncertainty. Add intervals from files or [NEEDS RUN] markers for:
+     recovery rate (n=25) with an exact or bootstrap interval, tau-b and NDCG
+     with across-seed intervals, and sign tests for rank movement. The abstract
+     must quote the across-seed figures alongside or instead of single-draw
+     ones. Precision@10 and MRR stay omitted unless given with intervals.
+ 16. Generalization and recovery definition. State the audit used one role
+     (confirm from m4/m11 files which) and that "recovery" counts any upward
+     movement, not crossing a shortlist cutoff; give the cutoff-crossing rate
+     only if it is in the files, otherwise [NEEDS RUN].
+ 17. Housekeeping. Use the Phase 0e template count; cite Figs. 3 and 4 in the
+     text where the screening and interview flows are described; give s_min.
+
+PHASE 3 - FORMATTING AND MECHANICS (items 18-25)
+ 18. Re-key all equations in LaTeX (S_ats, d, c(E), v, S_final), number them
+     (1)...(n), and refer to them as "(1)". Remove every literal "$$".
+ 19. Delete the "Commented [A1]" copyright box text, leave the author block as
+     a clearly marked placeholder, and delete the stray reference-list tail.
+ 20. Add a caption under every figure (Figs. 1-11) and above every table
+     (Tables I-IV plus any new ones), IEEE style, taken from the figure
+     manifest in metrics/figures.py where it exists. Shorten captions longer
+     than 60 words. Every caption for a simulated quantity contains the word
+     "simulated".
+ 21. Restore the design decisions as a numbered list in III-A. Fix Algorithm 1
+     line breaks so each numbered line is on its own line with aligned comments.
+ 22. Number style: no commas, consistently (41798, 10423, 8361).
+ 23. Remove duplication: keep the Li et al. and Gan et al. figures in II only
+     (the Introduction may cite them without numbers); shorten the Introduction
+     results paragraph; trim Abstract/Introduction/Conclusion overlap; make the
+     Conclusion's future-work sentence one clause pointing to Section VII.
+ 24. Results style. Move every interpretive sentence ("consistent with",
+     "by design", why scrypt is nondeterministic, etc.) to Discussion. Results
+     state what was measured and found only.
+ 25. Add a reproducibility paragraph in IV: commit hash, Python version, OS and
+     CPU from results.json environment, provider and model string and the date
+     for every live call, and a placeholder [REPOSITORY URL] for the released
+     harness. Do not invent a URL.
+
+PHASE 4 - MISSING SECTIONS (items 26-28)
+ 26. Write "VI. DISCUSSION AND THREATS TO VALIDITY" with: construct validity
+     (assigned ground truth), assumption that interview noise is unbiased,
+     non-independence of interview and resume, synthetic-resume realism,
+     self-authored corpora, small n, single role, LLM-as-judge and
+     self-preference (no human raters), fixed integrity, stub-dependence of
+     egress, and non-transferability of latency. One short paragraph each.
+ 27. Write "Ethics and Regulatory Considerations" (about 150 to 200 words):
+     identity matching and biometric data, consent, advisory-only use of
+     integrity output, human final decision, the high-risk classification of
+     employment AI in EU regulation and data-protection roles of a hosted
+     provider. Take these statements only from SECURITY-AND-DATA-SAFETY.md and
+     m8_egress.py notes; no new legal claims. No fairness claim.
+ 28. Add an Acknowledgment with an AI-assistance disclosure that states what
+     was assisted (implementation, drafting/editing, analysis support) and
+     that the authors verified all reported numbers against the released
+     harness. Mark it [AUTHORS MUST CONFIRM THIS IS TRUE].
+
+PHASE 5 - CITATION NUMBERING (required before delivery)
+ The current PDF's in-text numbers do not match its reference list (for
+ example the text cites Pudasaini as [2] and Li as [3] while the list has them
+ swapped, [4] is missing, and there is a second list numbered [1]-[24]).
+ Rebuild ONE reference list numbered by first appearance in the text, using
+ only supplied bibliographic data. Where the files disagree (Pudasaini year and
+ pages, Lo et al. pages), omit the disputed field and mark it
+ [AUTHOR TO CONFIRM]. Keep any "[VENUE NOT CONFIRMED]" note out of the final
+ text and list it in Open items instead. Every reference must be cited and
+ every citation must have a reference.
+
+OUTPUT FORMAT
+ 1. Phase 0 verification table.
+ 2. The complete revised paper, section by section, in final order, ready to
+    paste (abstract 150-250 words, single paragraph, no citations, and 3-5
+    keywords).
+ 3. Change log: a table with columns [Review item # | What changed | Where].
+ 4. Open items table: [marker | what is needed | exact command or source].
+ 5. Final self-check, answering yes/no with evidence: every [n] has a
+    reference; no number appears that is not in a supplied file; "false
+    correction rate" appears nowhere; "independent" is not applied to the
+    interview; the word "simulated" appears in every ranking caption; section
+    cross-references resolve; no raw LaTeX remains.
+
+Start with Phase 0. Do not write any revised text until the Phase 0 table is
+complete. If a file is missing, say so and continue with the rest.

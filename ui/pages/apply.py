@@ -413,6 +413,7 @@ def _actions(
                     type="primary",
                     use_container_width=True,
                 ):
+                    st.session_state["_room_interview_id"] = interview.id
                     st.query_params["interview_id"] = str(interview.id)
                     page = st.session_state.get("_pages", {}).get("interview_room")
                     if page is not None:

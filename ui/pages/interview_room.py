@@ -231,27 +231,54 @@ def _collect_browser_signals(p: ProctorSession | None) -> None:
 # --------------------------------------------------------------------------- #
 
 
+def _raw_param(name: str) -> str | None:
+    raw = st.query_params.get(name)
+    if isinstance(raw, (list, tuple)):
+        raw = raw[0] if raw else None
+    if raw is None or raw == "":
+        return None
+    return str(raw)
+
+
+def _resolve_interview_id(user: Any) -> int | None:
+    """Which interview this page should open.
+
+    Sidebar navigation and ``st.switch_page`` often arrive here with no
+    ``?interview_id=``. The candidate still has an interview — pick the live
+    one rather than showing an empty room.
+    """
+    raw = _raw_param("interview_id") or st.session_state.get(_KEY_IID)
+    if raw:
+        try:
+            return int(raw)
+        except (TypeError, ValueError):
+            return None
+
+    mine = interviews.for_user(user.id)
+    live = [item for item in mine if item.status in ("pending", "in_progress")]
+    if not live:
+        return None
+    in_progress = [item for item in live if item.status == "in_progress"]
+    return (in_progress or live)[0].id
+
+
 def render() -> None:
     theme.inject()
     user = session.require("candidate", "admin")
     if session.sandbox_view():
         theme.sandbox_banner("interview answers are flagged sandbox")
 
-    # Read interview_id from query params or from the session state deep-link.
-    params = st.query_params
-    raw_id = params.get("interview_id") or st.session_state.get(_KEY_IID)
-    if not raw_id:
+    iid = _resolve_interview_id(user)
+    if iid is None:
         _no_interview_selected()
         return
 
-    try:
-        iid = int(raw_id)
-    except (TypeError, ValueError):
-        _no_interview_selected()
-        return
-
-    # Persist the id in session state so a rerun keeps it.
+    # Persist so a rerun, a sidebar click, or a dropped query param still lands
+    # on the same interview. Only write the query param when it is missing —
+    # assigning it always would trigger a Streamlit rerun loop.
     st.session_state[_KEY_IID] = iid
+    if _raw_param("interview_id") != str(iid):
+        st.query_params["interview_id"] = str(iid)
 
     try:
         interview = interviews.require(iid, user.id)

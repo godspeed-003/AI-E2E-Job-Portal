@@ -26,6 +26,9 @@ end at least once on the machine you will present from.
 ### 1. Bring the environment up
 
 ```bash
+ollama run llama3.1
+
+
 python scripts/healthcheck.py
 ```
 

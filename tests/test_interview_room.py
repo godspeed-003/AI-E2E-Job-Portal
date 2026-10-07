@@ -140,9 +140,20 @@ def test_another_candidates_interview_is_refused_not_rendered():
 
 
 def test_no_interview_id_is_a_message_rather_than_a_crash():
-    user, _application, _interview = _shortlisted()
+    user = auth.register("no-interview@example.com", PASSWORD, full_name="No Interview")
 
     app = _room(user, None)
 
     assert not app.exception
     assert "No interview selected" in _text(app)
+
+
+def test_sidebar_open_picks_the_candidates_pending_interview():
+    """The Interview nav item has no query param — still open their live room."""
+    user, _application, interview = _shortlisted()
+
+    app = _room(user, None)
+
+    assert not app.exception
+    assert "Ready for your interview?" in _text(app)
+    assert app.session_state["_room_interview_id"] == interview.id

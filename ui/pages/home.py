@@ -161,6 +161,7 @@ def _go_interview(application_id: int) -> None:
     interview = interviews.for_application(application_id)
     if interview is None:
         return
+    st.session_state["_room_interview_id"] = interview.id
     st.query_params["interview_id"] = str(interview.id)
     page = st.session_state.get("_pages", {}).get("interview_room")
     if page is not None:

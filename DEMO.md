@@ -27,14 +27,30 @@ end at least once on the machine you will present from.
 
 ```bash
 ollama run llama3.1
+```
 
+```bash
+python scripts/download_models.py
+```
 
+Run the download **once per machine**, before the healthcheck. It fetches the
+four CV model weights (about 46 MB) into `models/`, which is git-ignored — the
+weights are not in the repository, so a fresh clone has none of them. They also
+download lazily on first use, but that happens mid-interview and fails quietly,
+which is the worst possible moment to discover the machine is offline.
+
+`--check` reports what is present without downloading anything.
+
+```bash
 python scripts/healthcheck.py
 ```
 
 Read the output. If the LLM row says FAIL you have no key, or `LLM_PROVIDER`
 points at an Ollama that is not running. **Fix it now** — this is the single most
 common way a demo dies.
+
+If a `Model ·` row says *missing*, run the download command above; the portal
+still runs without them, but proctoring degrades to a weaker integrity signal.
 
 ### 2. Populate the database
 
@@ -153,6 +169,13 @@ planned question, or wrap up. It is not reading from a list."*
 
 **If the mic misbehaves, type the answer instead.** The typed path is a first-class
 feature, not a fallback — say so rather than apologising.
+
+**Or press ✨ AI answer.** In a sandbox interview only, that button drafts a short
+answer and puts it in the box for you to review and submit. It exists so a demo
+can be walked end to end without typing six paragraphs in front of a panel, and
+it is refused on real interviews by the service — not merely hidden in the page.
+Use it to get to the score screen fast when the clock is against you; answer one
+question properly first so the panel sees the real path.
 
 ### Beat 4 — The recruiter's view (2 min)
 

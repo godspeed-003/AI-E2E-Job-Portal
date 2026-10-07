@@ -90,6 +90,17 @@ _STOPWORDS = frozenset(
 
 _WORD_RE = re.compile(r"[a-z0-9][a-z0-9+#.\-]*")
 
+# The pattern above deliberately admits ``.``, ``+``, ``#`` and ``-`` *inside* a
+# token so that ``node.js``, ``c++``, ``c#`` and ``well-tested`` survive as one
+# word each. The cost is that it also swallows the punctuation that ends a
+# sentence: "Kubernetes autoscaling." tokenised to ``autoscaling.``, which then
+# failed to match the ``autoscaling`` in an answer and halved the measured
+# overlap. Stripping a *trailing* run fixes it without losing the terms the
+# pattern exists for — note that only ``.`` and ``-`` are stripped, because
+# ``c++`` and ``c#`` genuinely end in their punctuation while no technical term
+# ends in a period.
+_TRAILING_PUNCT = ".-"
+
 # Below this share of shared content words, an answer is put to the model. Set
 # low on purpose: a real answer rarely echoes the question, so this fires only
 # when the two have essentially nothing in common.
@@ -166,9 +177,11 @@ def sanitize_resume(text: str) -> Verdict:
 
 def _content_words(text: str) -> set[str]:
     return {
-        word
+        stripped
         for word in _WORD_RE.findall((text or "").lower())
-        if len(word) > 2 and word not in _STOPWORDS
+        if (stripped := word.rstrip(_TRAILING_PUNCT))
+        and len(stripped) > 2
+        and stripped not in _STOPWORDS
     }
 
 

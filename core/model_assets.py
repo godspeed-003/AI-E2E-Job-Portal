@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import logging
 import threading
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -95,8 +96,20 @@ def is_cached(key: str) -> bool:
     return path.exists() and path.stat().st_size > ASSETS[key].approx_bytes * 0.5
 
 
-def ensure(key: str, *, allow_download: bool = True) -> Path | None:
-    """Return the local path to a model, downloading it once if needed."""
+def ensure(
+    key: str,
+    *,
+    allow_download: bool = True,
+    on_progress: Callable[[int, int], None] | None = None,
+) -> Path | None:
+    """Return the local path to a model, downloading it once if needed.
+
+    ``on_progress`` is called with ``(bytes_so_far, total_bytes)`` as the body
+    streams; ``total_bytes`` is 0 when the server sends no ``Content-Length``.
+    It exists for ``scripts/download_models.py``, which is the only caller that
+    has a terminal to draw on — the lazy in-request path passes nothing and
+    stays silent.
+    """
     if key not in ASSETS:
         raise KeyError(f"unknown model asset: {key}")
     if is_cached(key):
@@ -116,10 +129,28 @@ def ensure(key: str, *, allow_download: bool = True) -> Path | None:
             log.info("Downloading model %s (%s)", asset.key, asset.licence)
             with requests.get(asset.url, stream=True, timeout=180) as response:
                 response.raise_for_status()
+                total = int(response.headers.get("Content-Length") or 0)
+                done = 0
                 with tmp.open("wb") as handle:
                     for chunk in response.iter_content(chunk_size=1 << 16):
                         if chunk:
                             handle.write(chunk)
+                            done += len(chunk)
+                            if on_progress is not None:
+                                on_progress(done, total)
+
+            # A short read that never raised is the failure mode worth guarding:
+            # a truncated .onnx loads and then misbehaves at inference time,
+            # which is far harder to diagnose than a missing file. Compare
+            # against the expected size before promoting the temp file.
+            written = tmp.stat().st_size
+            if written < asset.approx_bytes * 0.5:
+                tmp.unlink(missing_ok=True)
+                raise OSError(
+                    f"{asset.filename} came back {written} bytes, expected about "
+                    f"{asset.approx_bytes}"
+                )
+
             tmp.replace(target)
             log.info("Model %s cached at %s", asset.key, target)
             return target

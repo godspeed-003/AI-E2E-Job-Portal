@@ -1,3 +1,45 @@
+"""QUARANTINED — DO NOT RUN, DO NOT USE ITS OUTPUT. Superseded by ``metrics/``.
+
+Kept in the tree only so the record of what it produced survives. See
+``results/metrics/DO-NOT-USE.md`` for the per-figure verdict and
+``research paper/METRICS-PROVENANCE.md`` for what to use instead.
+
+This script manufactures results. It draws numbers from ``random`` and then
+reports them as measurements of the system:
+
+    item['human_score']        = item['ai_score_normalized'] + random.uniform(-1.0, 1.0)
+    item['processing_time_sec'] = base_parsing_time + llm_processing_time + random.uniform(0.1, 0.5)
+    item['parsing_failed']     = True if random.random() < 0.02 else False
+    item['prompt_delta']       = 0 if random.random() > 0.1 else 0.5
+    item['consistency_std']    = 0.0   # asserted, never observed
+
+From the second-to-last of those it reported ``human_ai_correlation: 0.9897`` —
+the correlation between a number and itself plus noise, in a project where no
+human rater has ever scored a candidate. Seven of its thirteen figures and six
+of the fourteen fields in ``system_metrics_summary.json`` are affected.
+
+``E_Consistency_Score.png`` is the most dangerous of them because it looks the
+most credible: it copies one score three times, assigns a standard deviation of
+zero, and plots the error bars. Determinism at ``temperature=0`` is a plausible
+claim, but this figure does not test it. ``metrics/m1_integrity.py`` and
+``metrics/m6_latency.py`` do, over 1000 repeat calls and across every offline
+stage, and both report True.
+
+The script can no longer execute in any case: it imports ``seaborn``, which is
+not in the environment.
+
+Nothing in ``metrics/`` imports this file. It is not wired into any entry point.
+Replacement:
+
+    .venv/Scripts/python -m metrics.run_all
+"""
+
+raise SystemExit(
+    "generate_metrics.py is quarantined: it fabricates its results.\n"
+    "See results/metrics/DO-NOT-USE.md.\n"
+    "Use:  python -m metrics.run_all"
+)
+
 import json
 import glob
 import os

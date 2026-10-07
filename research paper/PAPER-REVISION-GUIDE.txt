@@ -432,19 +432,24 @@ drawn and validated; the rest are blocked on measurements that do not exist.
 AVAILABLE NOW, in `research paper/figures/` as paired PDF + PNG at IEEE column
 widths (3.5 in single, 7.16 in double, 8 pt minimum type):
 
-  Fig. 1  figure_architecture     Module map with the trust boundary marked.
-                                  Red arrows are exactly the calls that leave
+  Fig. 1  fig_architecture        Module map with the trust boundary marked.
+          (double, 7.16 in)       Red arrows are exactly the calls that leave
                                   the host; everything in-process is grey. Use
                                   this for the draft's Section III-A slot.
-  Fig. 2  figure_pipeline         Six-stage flow, double column. The row above
-                                  each stage counts its model calls, which is
-                                  what makes the deterministic pre-filter's
-                                  value visible at a glance.
-  Fig. 3  figure_screening_workflow
-  Fig. 4  figure_interview_workflow
+  Fig. 2  fig_pipeline            Six-stage flow. The row above each stage
+          (double, 7.16 in)       counts its model calls, which is what makes
+                                  the deterministic pre-filter's value visible
+                                  at a glance.
+  Fig. 3  fig_screening_workflow  services.application_service.screen control
+          (single, 3.5 in)        flow.
+  Fig. 4  fig_interview_workflow  services.interview_service control flow.
+          (double, 7.16 in)
 
-  Plus 13 further figures generated from the results, listed in
-  `research paper/figures/README.md` with the measurement each is drawn from.
+  Plus 13 further figures generated from the results. Full inventory, with the
+  measurement each one is drawn from and the three that carry hard caption
+  constraints: `research paper/figures/README.md`. Captions are already written
+  and live in `results.json` -> `figures[].caption` --- copy them from there
+  rather than retyping, because they carry measured numbers inline.
 
 A NOTE ON THESE FOUR, worth carrying into your own practice: all four rendered
 without error while carrying visible defects --- text running out through the
@@ -742,22 +747,62 @@ gems). SIMULATED, and every table and caption must say so.
 PART 6 --- WHAT MUST NOT BE CLAIMED
 ================================================================================
 
-6.1  DO NOT USE `scripts/generate_metrics.py` OR ANYTHING IT PRODUCED.
+6.1  DO NOT USE `generate_metrics.py` (repo root) OR ANYTHING IT PRODUCED.
 
-     That script fabricates its human-agreement data. The line is:
+     That script draws numbers from `random` and reports them as measurements
+     of the system:
 
-         item['human_score'] = item['ai_score_normalized'] + random.uniform(-1.0, 1.0)
+         item['human_score']         = item['ai_score_normalized'] + random.uniform(-1.0, 1.0)
+         item['processing_time_sec'] = base_parsing_time + llm_processing_time + random.uniform(0.1, 0.5)
+         item['parsing_failed']      = True if random.random() < 0.02 else False
+         item['prompt_delta']        = 0 if random.random() > 0.1 else 0.5
+         item['consistency_std']     = 0.0   # asserted, never observed
 
-     It invents a "human score" by adding noise to the AI's own score, then
-     correlates the two. The resulting figure --- `results/metrics/
-     I_Human_vs_AI.png` --- and the value `human_ai_correlation =
-     0.9897270711602314` are artefacts of that construction and nothing else.
-     A 0.99 correlation between AI and human judgement would be an
-     extraordinary claim; here it is arithmetic on a random offset.
+     From the first line it reported `human_ai_correlation =
+     0.9897270711602314` --- the correlation between a number and itself plus
+     noise, in a project where NO HUMAN RATER HAS EVER SCORED A CANDIDATE. A
+     0.99 AI-human agreement would be an extraordinary claim; here it is
+     arithmetic on a random offset.
 
-     DELETE the figure, DELETE the number, and do not re-derive anything from
-     that script. If it stays in the repository, it needs a header comment
-     saying its output is not usable as evidence.
+     THE CONTAMINATION IS WIDER THAN THAT ONE FIGURE. Of the 13 PNGs it wrote
+     to `results/metrics/`, SEVEN are fabricated:
+
+         B_Skill_Match_Ratio     +/- random.uniform(-0.1, 0.1)
+         C_Processing_Time       invented base + random.uniform(0.1, 0.5);
+                                 nothing was ever timed
+         E_Consistency_Score     [base, base, base] and std = 0.0 hardcoded;
+                                 the model was never run three times
+         F_Prompt_Sensitivity    random.random() > 0.1; no second prompt
+                                 variant was ever sent
+         I_Human_vs_AI           +/- random.uniform(-1.0, 1.0)
+         J_End_To_End_Time       fabricated time + random.uniform(2.0, 5.5)
+         K_Pipeline_Failures     random.random() < 0.02; no failure observed
+
+     And SIX of the 14 fields in `system_metrics_summary.json`:
+     avg_processing_time_sec, avg_total_pipeline_time, avg_consistency_std
+     (asserted, not measured), human_ai_mae, human_ai_correlation,
+     error_rate_overall. `detailed_candidate_metrics.csv` mixes real and
+     fabricated columns in one table with no marking --- it cannot be used as
+     a data appendix.
+
+     The remaining six PNGs (A, D, G, H, L, M) derive from real
+     `data/results/*.json` output. They are not fabrications, but they carry
+     no provenance label, no seed, no cohort description, and no environment
+     record, and the harness now measures the same things with all of that
+     attached. Do not reuse them either.
+
+     E_CONSISTENCY_SCORE IS THE MOST DANGEROUS OF THE SEVEN, because it is the
+     one that looks most credible. Determinism at temperature=0 is a plausible
+     claim and the source even reasons about why. But the figure does not test
+     the claim --- it copies one score three times, assigns a standard
+     deviation of zero, and plots the error bars. The shipped harness does test
+     determinism: 1000 repeat calls in m1_integrity, every offline stage in
+     m6_latency, both True. Cite those.
+
+     STATUS: the script now raises SystemExit before any import completes, and
+     `results/metrics/DO-NOT-USE.md` carries the per-file verdict next to the
+     files themselves so anyone globbing that directory finds it. Nothing in
+     `metrics/` imports it.
 
      This is the one item in this document that could end a career rather than
      a submission. Nothing else here is in that category.
@@ -1143,13 +1188,13 @@ without human raters, labelled media, or demographic data, and a fabricated
 substitute for any of them is worse than the gap.
 
 The stronger move is to make the gap itself part of the method. The harness
-emits 241 labelled quantities, 16 of them explicitly `unavailable` with a
-machine-readable statement of what each one needs. A paper that reports 225
-measured quantities and names the 16 it cannot measure is more trustworthy than
-one that reports 241 and hopes nobody checks. That discipline --- provenance
-labels assigned by the harness rather than by the author at writing time --- is
-the most novel thing in this work, and it costs nothing to claim because it is
-already built.
+emits 243 labelled quantities, 16 of them explicitly `unavailable` with a
+machine-readable statement of what each one needs. A paper that reports 227
+quantities and names the 16 it cannot measure is more trustworthy than one that
+reports 243 and hopes nobody checks. That discipline --- provenance labels
+assigned by the harness rather than by the author at writing time --- is the most
+novel thing in this work, and it costs nothing to claim because it is already
+built.
 
 Two findings are worth more than the pipeline itself, and neither is currently
 in the abstract:

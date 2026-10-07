@@ -54,6 +54,12 @@ _KEY_WR_CTX = "_room_wr_ctx"          # WebRtcStreamerContext | None
 _KEY_FLASH = "_room_flash"            # (kind, msg) | None
 _KEY_PROCTOR = "_room_proctor"        # ProctorSession | None
 _KEY_LAST_FRAME = "_room_last_frame"  # [np.ndarray | None]: newest preview frame
+_KEY_DRAFT = "_room_draft"            # str | None: sandbox draft awaiting the box
+
+# Shorter than this and Whisper either returns nothing or invents a stock phrase
+# ("Thank you.", "Okay."). The second failure mode is the dangerous one, so the
+# clip is refused before it reaches the model rather than after.
+MIN_ANSWER_SECONDS = 1.0
 
 
 # --------------------------------------------------------------------------- #
@@ -105,19 +111,74 @@ def _fmt_window(interview: Interview) -> str:
 # --------------------------------------------------------------------------- #
 
 
-class _AudioSink:
-    """Accumulate audio frames into a shared buffer."""
+def _resample_to_mono16k(
+    frame: av.AudioFrame, resampler: av.AudioResampler
+) -> list[np.ndarray]:
+    """Convert one WebRTC audio frame to 16 kHz mono float32 in [-1, 1].
 
-    def __init__(self, buf: list[np.ndarray]) -> None:
-        self._buf = buf
+    This exists because the obvious version is wrong in a way that is invisible
+    until you listen to the result. WebRTC hands us 48 kHz **stereo** frames,
+    and ``frame.to_ndarray()`` returns them *packed*: shape ``(1, 1920)`` for a
+    960-sample frame, with the two channels interleaved along the second axis.
+    The previous code did::
 
-    def recv(self, frame: av.AudioFrame) -> av.AudioFrame:
-        arr = frame.to_ndarray()
-        # Flatten to mono float32 in [-1, 1]
         if arr.ndim > 1:
             arr = arr.mean(axis=0)
-        self._buf.append(arr.astype(np.float32))
-        return frame
+
+    which averages over an axis of length 1 — a no-op. The interleaved stereo
+    data came through untouched at double length and was then written under a
+    16 kHz mono WAV header, stretching every clip by 6x and dropping it about an
+    octave and a half. Whisper returned empty strings, so the microphone looked
+    broken when the capture was fine.
+
+    Resampling has to happen here, on the media thread, because this is the only
+    place the frame still carries its own ``sample_rate`` and layout. The
+    resampler is stateful (it holds a filter delay line), so callers pass in one
+    instance per stream rather than building one per frame.
+    """
+    produced = resampler.resample(frame)
+    if produced is None:
+        return []
+    if not isinstance(produced, (list, tuple)):
+        produced = [produced]
+
+    chunks: list[np.ndarray] = []
+    for out in produced:
+        arr = out.to_ndarray()
+        if arr.ndim > 1:
+            # Mono layout, so this is (1, n) — ravel rather than average.
+            arr = arr.reshape(-1)
+        if arr.dtype == np.int16:
+            # Scale by 32768 so the range is [-1, 1). Leaving it as raw int16
+            # would still "work" because pcm_to_wav_bytes peak-normalises
+            # anything above 1.0, but that silently rescales every clip to full
+            # scale and so amplifies the noise floor of a near-silent one.
+            arr = arr.astype(np.float32) / 32768.0
+        else:
+            arr = arr.astype(np.float32)
+        if arr.size:
+            chunks.append(arr)
+    return chunks
+
+
+def _buffered_seconds() -> float:
+    """Length of the pending recording, in seconds of audio.
+
+    Safe to call from the script thread while the media thread appends: it only
+    reads ``.size`` off chunks already in the list, and a chunk appended
+    mid-iteration is simply counted on the next rerun.
+    """
+    buf: list[np.ndarray] = st.session_state.get(_KEY_AUDIO_BUF, [])
+    if not buf:
+        return 0.0
+    samples = sum(int(chunk.size) for chunk in list(buf))
+    return samples / float(stt_module.TARGET_SAMPLE_RATE)
+
+
+def _new_audio_resampler() -> av.AudioResampler:
+    return av.AudioResampler(
+        format="s16", layout="mono", rate=stt_module.TARGET_SAMPLE_RATE
+    )
 
 
 def _drain_audio() -> np.ndarray | None:
@@ -603,11 +664,23 @@ def _webrtc_capture_panel(interview: Interview) -> None:
         buf: list[np.ndarray] = st.session_state.setdefault(_KEY_AUDIO_BUF, [])
 
         class _Sink(AudioProcessorBase):
+            """Resample to 16 kHz mono and accumulate.
+
+            One resampler per instance: streamlit-webrtc builds a fresh
+            processor per connection, and the resampler carries filter state
+            that must not be shared across streams.
+            """
+
+            def __init__(self) -> None:
+                self._resampler = _new_audio_resampler()
+
             def recv(self, frame: av.AudioFrame) -> av.AudioFrame:  # type: ignore[override]
-                arr = frame.to_ndarray()
-                if arr.ndim > 1:
-                    arr = arr.mean(axis=0)
-                buf.append(arr.astype(np.float32))
+                try:
+                    buf.extend(_resample_to_mono16k(frame, self._resampler))
+                except Exception as exc:
+                    # The media thread must keep returning frames: dropping a
+                    # chunk costs a word, raising kills the whole stream.
+                    log.debug("audio resample failed: %s", exc)
                 return frame
 
         ctx = webrtc_streamer(
@@ -626,10 +699,14 @@ def _webrtc_capture_panel(interview: Interview) -> None:
         st.session_state[_KEY_WR_CTX] = ctx
 
         recording = ctx is not None and ctx.state.playing
+        captured = _buffered_seconds()
         if recording:
-            st.info("🔴 Recording…")
-        elif buf:
-            st.success(f"Recording ready ({len(buf)} frames captured).")
+            st.info(f"🔴 Recording… {captured:.1f}s captured")
+        elif captured > 0:
+            # Seconds, not frame count. The buffer holds resampled chunks whose
+            # count is an artefact of the network's framing, so "412 frames"
+            # told a candidate nothing about whether they had actually spoken.
+            st.success(f"Recording ready — {captured:.1f}s. Submit it on the right.")
 
         if p is not None and not recording:
             # Camera off mid-interview is worth saying plainly — it is the one
@@ -644,6 +721,14 @@ def _webrtc_capture_panel(interview: Interview) -> None:
 def _typed_answer_panel(user: Any, interview: Interview, turn: Turn) -> None:
     st.markdown("##### ⌨ Type your answer")
     st.caption("Use this if you prefer to type, or if your microphone is unavailable.")
+
+    # A draft written on the last rerun goes into the box as its initial value.
+    # Streamlit will not let a widget's value be assigned once it exists, so the
+    # draft is staged under its own key and consumed here, before the widget is
+    # built.
+    drafted = st.session_state.pop(_KEY_DRAFT, None)
+    if drafted:
+        st.session_state["_room_answer_textarea"] = drafted
 
     typed = st.text_area(
         "Your answer",
@@ -660,7 +745,7 @@ def _typed_answer_panel(user: Any, interview: Interview, turn: Turn) -> None:
             "Submit recording",
             key="_room_submit_audio",
             use_container_width=True,
-            disabled=not st.session_state.get(_KEY_AUDIO_BUF),
+            disabled=_buffered_seconds() <= 0,
         ):
             _submit_audio(user, interview, turn)
 
@@ -674,6 +759,42 @@ def _typed_answer_panel(user: Any, interview: Interview, turn: Turn) -> None:
         ):
             _submit_text(user, interview, turn, typed)
 
+    _draft_answer_control(interview, turn)
+
+
+def _draft_answer_control(interview: Interview, turn: Turn) -> None:
+    """The sandbox-only *AI answer* button.
+
+    Shown for sandbox interviews and nothing else. The service refuses a real
+    interview outright, so this is presentation rather than enforcement — but a
+    button that is visible and then errors is worse than no button, so the two
+    conditions are kept in step.
+
+    It fills the box instead of submitting. The draft is still the candidate's
+    answer of record, so it goes through the same guardrail and the same submit
+    path as typed text, and whoever is presenting can see what is about to be
+    sent.
+    """
+    if not (interview.is_sandbox and session.sandbox_view()):
+        return
+
+    st.caption("Sandbox only — fills the box with a short answer so a demo can move.")
+    if st.button(
+        "✨ AI answer",
+        key="_room_draft_answer",
+        use_container_width=True,
+        help="Draft a short answer to this question. Review it, then submit.",
+    ):
+        with st.spinner("Drafting a short answer…"):
+            try:
+                draft = interviews.draft_answer(interview.id, turn.question)
+            except InterviewError as exc:
+                _flash("error", str(exc))
+                st.rerun()
+                return
+        st.session_state[_KEY_DRAFT] = draft
+        st.rerun()
+
 
 def _submit_audio(user: Any, interview: Interview, turn: Turn) -> None:
     samples = _drain_audio()
@@ -683,6 +804,21 @@ def _submit_audio(user: Any, interview: Interview, turn: Turn) -> None:
         return
 
     sample_rate = stt_module.TARGET_SAMPLE_RATE
+
+    # Whisper on a fraction of a second returns either nothing or a hallucinated
+    # stock phrase, and the second is worse: it would be submitted as the
+    # candidate's answer. Catch it here, where we can still say what went wrong,
+    # rather than letting it through as a transcription failure.
+    duration = len(samples) / float(sample_rate)
+    if duration < MIN_ANSWER_SECONDS:
+        _flash(
+            "warning",
+            f"That recording was only {duration:.1f}s. Hold **Start** and speak "
+            "for a few seconds, or type your answer instead.",
+        )
+        st.rerun()
+        return
+
     with st.spinner("Transcribing your answer…"):
         try:
             wav = stt_module.pcm_to_wav_bytes(samples, sample_rate)

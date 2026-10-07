@@ -91,6 +91,13 @@ class InterviewError(Exception):
 # --------------------------------------------------------------------------- #
 
 _WORD = re.compile(r"[a-z0-9][a-z0-9+#.\-]*")
+
+# Same trailing-punctuation strip as the guardrail, and for the same reason: the
+# pattern admits ``.``/``-`` inside a token so ``node.js`` and ``well-tested``
+# survive, which also made it swallow sentence-final periods. ``autoscaling.``
+# then matched nothing. Only ``.`` and ``-`` are stripped — ``c++`` and ``c#``
+# really do end in their punctuation.
+_TRAILING_PUNCT = ".-"
 _STOP = frozenset(
     """
     a an and are as at be been but by can did do for from had has have how i if in
@@ -101,7 +108,11 @@ _STOP = frozenset(
 
 
 def _words(text: str) -> list[str]:
-    return _WORD.findall((text or "").lower())
+    return [
+        stripped
+        for word in _WORD.findall((text or "").lower())
+        if (stripped := word.rstrip(_TRAILING_PUNCT))
+    ]
 
 
 def _content_words(text: str) -> set[str]:
@@ -690,6 +701,164 @@ def shorten(interview_id: int, questions: int) -> Interview:
     _touch(interview_id, **columns)
     db.audit(None, "interview.shortened", interview_id=interview_id, questions=planned)
     return get(interview_id)  # type: ignore[return-value]
+
+
+def draft_answer(interview_id: int, question: str, *, max_words: int = 45) -> str:
+    """Draft a short answer to ``question`` — *sandbox interviews only*.
+
+    Walking a demo through six questions means typing six paragraphs, and the
+    person presenting is usually talking to a panel while they do it. This fills
+    the box with something plausible so the flow can be shown end to end in the
+    time a viva slot allows.
+
+    Refused on real interviews, and refused in the service rather than only in
+    the page, because a convenience that writes a candidate's answer for them is
+    exactly the kind of thing that must not be reachable by setting a query
+    parameter. The page hides the button; this is what makes the button's absence
+    mean something.
+
+    The result is deliberately short — two sentences, under ``max_words`` — but
+    it still has to clear the two gates every real answer clears:
+    ``min_answer_words`` (12 by default) and the guardrail's word-overlap floor
+    against the question. The offline fallback below is built out of the
+    question's own content words for precisely that reason, so it passes the
+    overlap check by construction rather than by luck.
+    """
+    interview = get(interview_id)
+    if interview is None:
+        raise InterviewError("That interview no longer exists.")
+    if not interview.is_sandbox:
+        raise InterviewError("Draft answers are only available in sandbox mode.")
+
+    asked = (question or "").strip()
+    if not asked:
+        raise InterviewError("There is no question to answer yet.")
+
+    floor = settings.interview.min_answer_words
+    # A ceiling below the floor would be unsatisfiable, and the floor is
+    # configurable, so clamp rather than trusting the caller's default.
+    ceiling = max(max_words, floor + 8)
+
+    # The role title reads better in the prompt than the slug, but a sandbox
+    # interview can outlive its role in the catalogue, so fall back rather than
+    # letting a lookup failure take the button down.
+    try:
+        _, role, _ = _context(interview)
+        role_title = role.title
+    except Exception:
+        role_title = interview.role_id
+
+    try:
+        drafted = get_llm().generate(
+            _fill(
+                "interview_draft_answer.txt",
+                {
+                    "{question}": _clip(asked, 600),
+                    "{role_title}": role_title,
+                    "{min_words}": str(floor),
+                    "{max_words}": str(ceiling),
+                },
+            ),
+            system=(
+                "You are a competent candidate in a job interview. Answer in "
+                "plain prose. No preamble, no bullet points, no markdown."
+            ),
+            temperature=0.5,
+            max_output_tokens=256,
+        )
+        text = _tidy_draft(getattr(drafted, "text", "") or "")
+    except Exception as exc:
+        # Never surface this: the whole point is a demo that does not stall. The
+        # fallback is good enough to walk the flow, which is all this is for.
+        log.debug("draft_answer fell back to the offline template: %s", exc)
+        text = ""
+
+    if not _draft_is_usable(text, asked, floor=floor):
+        text = _offline_draft(asked, floor=floor)
+
+    return _trim_words(text, ceiling)
+
+
+def _draft_is_usable(text: str, question: str, *, floor: int) -> bool:
+    """Would this draft survive being submitted as a real answer?
+
+    Checking the word count alone is not enough, and the ``fake`` provider is
+    the proof: it dispatches its canned replies on markers in the prompt, and
+    anything it does not recognise falls through to a screening-evaluation JSON
+    blob. That blob is well over the word floor, so a length-only check let it
+    through and the button pasted ``{"candidate_name": ...}`` into the answer
+    box.
+
+    So the test is the gate the draft actually has to pass. ``_overlap`` and
+    ``_OFF_TOPIC_OVERLAP`` are imported from the guardrail rather than
+    re-derived, because a fallback that triggers on a different threshold than
+    the one enforcing rejection is a fallback that fires at the wrong times.
+    """
+    if not text:
+        return False
+    # A JSON or markup payload is never an answer, whatever its length.
+    if text.lstrip()[:1] in "{[<":
+        return False
+    if len(_words(text)) < floor:
+        return False
+    return guardrails._overlap(text, question) >= guardrails._OFF_TOPIC_OVERLAP
+
+
+def _tidy_draft(text: str) -> str:
+    """Strip the scaffolding models put around a short answer."""
+    cleaned = text.strip()
+    # Models reliably ignore "no markdown" for emphasis and list markers.
+    cleaned = re.sub(r"^\s*[-*•]\s*", "", cleaned, flags=re.MULTILINE)
+    cleaned = re.sub(r"[*_`#]+", "", cleaned)
+    # And they reliably open with one of these despite "no preamble". The
+    # separator class has to include "!" and "." as well as ":" and ",", because
+    # the single most common form of this is literally "Sure!".
+    cleaned = re.sub(
+        r"^(sure|certainly|of course|absolutely|here(?:'s| is)[^:.!]*|answer)"
+        r"\s*[:,.!—-]+\s*",
+        "",
+        cleaned,
+        flags=re.IGNORECASE,
+    )
+    return " ".join(cleaned.split())
+
+
+def _trim_words(text: str, limit: int) -> str:
+    """Cut to ``limit`` words at a sentence boundary where there is one."""
+    words = _words(text)
+    if len(words) <= limit:
+        return text.strip()
+    clipped = " ".join(text.split()[:limit])
+    cut = max(clipped.rfind("."), clipped.rfind("!"), clipped.rfind("?"))
+    # Only honour a sentence end in the last third, or a long first sentence
+    # would be truncated to a fragment of itself.
+    if cut > len(clipped) * 0.6:
+        return clipped[: cut + 1]
+    return clipped.rstrip(" ,;:") + "."
+
+
+def _offline_draft(question: str, *, floor: int) -> str:
+    """A template answer built from the question's own words.
+
+    Used when the provider is unreachable, throttled, or the ``fake`` stub. It
+    reuses the question's content words so the guardrail's overlap check passes
+    by construction — a generic "I have experience in that area" would be
+    flagged ``low_overlap`` and rejected, which would make the button look
+    broken in exactly the offline demo it exists to support.
+    """
+    topics = [w for w in sorted(_content_words(question), key=len, reverse=True)[:3]]
+    subject = ", ".join(topics) if topics else "this area"
+    # An em-dash appositive rather than a direct object: the question's content
+    # words are whatever they are, and "I worked directly on debugged" reads as
+    # a bug where "a regular part of the work — debugged" reads as a list.
+    draft = (
+        f"In my last role this was a regular part of the work — {subject}. "
+        f"I scoped the problem, measured what was actually slow, and shipped a "
+        f"fix with tests around it, which is the same approach I would take here."
+    )
+    if len(_words(draft)) < floor:  # pragma: no cover - floor is 12 by default
+        draft += " I can walk through the specifics if that would help."
+    return draft
 
 
 def ensure_for_application(

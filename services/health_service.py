@@ -154,7 +154,14 @@ def _check_models() -> list[Check]:
                 detail=(
                     f"{entry['size_mb']} MB · {entry['licence']}"
                     if cached
-                    else f"not downloaded yet ({entry['size_mb']} MB, {entry['licence']})"
+                    # Saying "not downloaded yet" and stopping there left the
+                    # reader with nothing to do about it — the lazy download
+                    # happens mid-interview and fails quietly, so a missing
+                    # weight looked like a dead end. Name the command.
+                    else (
+                        f"missing ({entry['size_mb']} MB, {entry['licence']}) — "
+                        "run: python scripts/download_models.py"
+                    )
                 ),
                 group="models",
                 extra=dict(entry),

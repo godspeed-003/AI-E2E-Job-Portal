@@ -533,13 +533,40 @@ def _interviewed(fake_llm, *, answers: int = 2) -> tuple[auth.User, interviews.I
     return user, interviews.finish(live.id)
 
 
+def test_criteria_is_attribute_access_on_both_classes(fake_llm):
+    """``criteria`` must never go back to being a method on ``Interview``.
+
+    It used to be one, while ``Application.criteria`` was a dataclass field —
+    the same name meaning two different things on the two objects a recruiter
+    page holds side by side. The failure was quiet rather than loud:
+    ``interview.criteria`` returned a bound method, which is truthy, so
+    ``if interview.criteria:`` passed whether or not the interview had been
+    graded and the ``.items()`` call behind it raised instead.
+
+    Asserting on the type rather than the value is the point. A test that only
+    read ``criteria["communication"]`` would keep passing if someone restored
+    the parentheses at every call site, and the trap would be back.
+    """
+    _user, done = _interviewed(fake_llm)
+    _user2, _app, pending = _shortlisted("mira@example.com")
+
+    assert isinstance(done.criteria, dict)
+    assert not callable(done.criteria)
+    # An ungraded interview reports an empty mapping, not a truthy callable.
+    assert pending.criteria == {}
+    assert not pending.criteria
+
+    assert isinstance(_app.criteria, dict)
+    assert not callable(_app.criteria)
+
+
 def test_a_finished_interview_is_scored_out_of_twenty_five(fake_llm):
     _user, done = _interviewed(fake_llm)
 
     assert done.status == "completed"
     assert done.total_score == 18  # the fake's 4+4+3+4+3
     assert done.max_total_score == 25
-    assert done.criteria() == {
+    assert done.criteria == {
         "technical_depth": 4,
         "problem_solving": 4,
         "communication": 3,
@@ -583,7 +610,7 @@ def test_the_total_is_the_sum_of_the_criteria_not_the_models_arithmetic(fake_llm
 
     done = interviews.finish(live.id)
 
-    assert done.criteria()["communication"] == 5  # clamped
+    assert done.criteria["communication"] == 5  # clamped
     assert done.total_score == 11  # 2 + 2 + 5 + 1 + 1, recomputed
     assert done.evaluation["recommendation"] == "hold"  # unrecognised, not invented
 

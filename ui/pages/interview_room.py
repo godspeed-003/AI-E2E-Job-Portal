@@ -985,7 +985,7 @@ def _phase_done(interview: Interview) -> None:
                 st.markdown(f"- {w}")
 
     # ---- Criteria breakdown ------------------------------------------------
-    criteria = interview.criteria()
+    criteria = interview.criteria
     if criteria:
         st.write("")
         st.markdown("##### Criteria breakdown")

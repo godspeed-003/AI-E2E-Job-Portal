@@ -467,7 +467,17 @@ class Interview:
     def scored(self) -> bool:
         return self.total_score is not None
 
+    @property
     def criteria(self) -> dict[str, int]:
+        """The per-dimension scores, or ``{}`` before a model has graded.
+
+        A property, to match :attr:`Application.criteria` and every accessor
+        around it here. It was a plain method, which made ``interview.criteria``
+        a bound object — truthy, so ``if interview.criteria:`` passed whether or
+        not the interview had been scored, and ``.items()`` on it raised. The
+        same name meaning two different things on the two classes a recruiter
+        page holds side by side is a trap worth closing rather than documenting.
+        """
         raw = self.evaluation.get("criteria")
         return dict(raw) if isinstance(raw, dict) else {}
 

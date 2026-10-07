@@ -408,7 +408,7 @@ def _interview_panel(interview: ivs.Interview) -> None:
                 theme.html_block(
                     theme.card("Summary", body=theme.esc(evaluation["summary"]))
                 )
-            criteria = interview.criteria()
+            criteria = interview.criteria
             if criteria:
                 theme.html_block(
                     theme.kv([(k.replace("_", " ").title(), f"{v}/5")

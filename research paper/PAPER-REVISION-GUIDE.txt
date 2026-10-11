@@ -731,16 +731,17 @@ gems). SIMULATED, and every table and caption must say so.
   !!
   !! As measured 2026-09-27  ->  as measured 2026-10-11:
   !!     source files        33  ->  34
-  !!     test files          15  ->  17
-  !!     test definitions   358  ->  378
-  !!     test cases         371  ->  397
+  !!     test files          15  ->  18
+  !!     test definitions   358  ->  385
+  !!     test cases         371  ->  404
   !!
-  !! The 2026-10-11 run also confirmed `397 passed`, i.e. test_cases still
-  !! equals pytest's own collection exactly. The drift came from three test
-  !! files added while fixing the microphone capture path.
+  !! The 2026-10-11 run also confirmed `404 passed`, i.e. test_cases still
+  !! equals pytest's own collection exactly. The drift came from test files
+  !! added while fixing the microphone capture path and adding the transcript
+  !! review step. These counts moved TWICE in one day — read them from
+  !! results.json, never from a draft.
 
-  source lines                10 423         test-to-source line ratio  0.428
-  source lines (code only)     8 361
+  source lines                10 911         test-to-source line ratio  0.457
 
   Stable across both runs, and safe to quote:
   DB tables 11, columns 121, foreign keys 7, cascade deletes 7,

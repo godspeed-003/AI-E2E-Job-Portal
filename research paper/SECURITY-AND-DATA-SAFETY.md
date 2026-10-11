@@ -204,7 +204,7 @@ an attacker with the leaked hashes.
 
 ## 6. Prompt injection
 
-Measured over a constructed corpus: 31 attacks, 18 benign inputs (5 of them
+Measured over a constructed corpus: 31 attacks, 18 benign inputs (10 of them
 hard negatives). Tier 1 is pure regex — no network, no model, no randomness —
 so these numbers are reproducible to the character on any machine.
 

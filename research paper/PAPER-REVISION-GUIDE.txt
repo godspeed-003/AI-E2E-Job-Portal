@@ -723,24 +723,37 @@ gems). SIMULATED, and every table and caption must say so.
   measured three-way discrimination, not an assertion.
 
 --------------------------------------------------------------------------------
-5.9  The artefact                                                   [measured]
+5.9  The artefact                                   [measured — AND PERISHABLE]
 --------------------------------------------------------------------------------
-  source files                    33         test files              15
-  source lines                10 423         test definitions       358
-  source lines (code only)     8 361         test cases             371
-  test-to-source line ratio    0.428
+  !! THESE SIX COUNTS MOVE EVERY TIME A TEST OR A MODULE IS ADDED. Re-read them
+  !! from results.json immediately before submitting; do not copy them from
+  !! here, and do not copy them from a draft written on another day.
+  !!
+  !! As measured 2026-09-27  ->  as measured 2026-10-11:
+  !!     source files        33  ->  34
+  !!     test files          15  ->  17
+  !!     test definitions   358  ->  378
+  !!     test cases         371  ->  397
+  !!
+  !! The 2026-10-11 run also confirmed `397 passed`, i.e. test_cases still
+  !! equals pytest's own collection exactly. The drift came from three test
+  !! files added while fixing the microphone capture path.
 
+  source lines                10 423         test-to-source line ratio  0.428
+  source lines (code only)     8 361
+
+  Stable across both runs, and safe to quote:
   DB tables 11, columns 121, foreign keys 7, cascade deletes 7,
   PII columns 22, biometric-media columns 4
   config groups 6, config settings 45, prompt templates 5
   proctoring event kinds 13, guardrail pattern families 5
   pinned dependencies 17, AGPL-3.0 dependencies: ultralytics
 
-  QUOTE 358 AND 371 TOGETHER OR NEITHER. They measure different things: 358
-  `def test_*` definitions, 371 cases collected by pytest, the difference being
-  13 parametrised expansions across four files. Publishing one next to a
-  "371 passed" pass count invites the reader to find a discrepancy that is not
-  there. The harness now emits both, with that explanation in the note field.
+  QUOTE THE DEFINITION COUNT AND THE CASE COUNT TOGETHER OR NEITHER. They
+  measure different things: `def test_*` definitions versus cases collected by
+  pytest, the difference being parametrised expansions. Publishing one next to a
+  pass count invites the reader to find a discrepancy that is not there. The
+  harness emits both, with that explanation in the note field.
 
 
 ================================================================================
@@ -1209,3 +1222,147 @@ in the abstract:
     hiring that focuses on the resume is looking at the wrong surface.
 
 Lead with those.
+
+
+================================================================================
+PART 12 --- RESOLUTIONS, 2026-10-11
+Answers to items the Revision Report left open as VERIFICATION REQUIRED
+================================================================================
+
+Each of these was flagged in `Revision_Report.docx` and deliberately not
+resolved there, which was the right call: they needed the code, not the
+manuscript. All four are now settled against the running system. Where a flag
+turned out to be stale rather than wrong, that is said plainly.
+
+--------------------------------------------------------------------------------
+12.1  RESOLVED --- Table II 0.5572 vs Section VII-B 0.6087 is a TIE-BREAK
+      difference, and the report's hypothesis was exactly right.
+--------------------------------------------------------------------------------
+Two different sort keys over the same LLM scores:
+
+  metrics/m4_baselines.py:228
+      sorted(..., key=lambda i: (-scores[i], ids[i]))
+      -> ties broken by candidate id. Arbitrary.
+
+  core/ranking.py:273  (resume_only_rank, used by m5_fusion_audit)
+      sorted(..., key=lambda c: (-c.llm_score, -c.ats_score, c.application_id))
+      -> ties broken by ATS keyword score first. Informative.
+
+Why it moves the metric so much, measured on the shipped cohort:
+
+      cohort size                                     100
+      distinct LLM scores                              24
+      candidates sharing a score                   97 (97%)
+      largest single tie group                         10
+      positions that differ between the two keys    83 of 100
+
+With 97% of the cohort tied, the tie-break *is* the ranking. The ATS key
+carries real signal about the candidate, so m5's 0.6087 is legitimately higher
+than m4's 0.5572 — the difference is not noise and not a bug.
+
+WHAT TO WRITE. Do not leave two numbers for one quantity. Either:
+  (a) report both with one sentence of explanation --- "the simulated LLM
+      ranker scores 0.5572 under an arbitrary (id) tie-break and 0.6087 when
+      ties are broken by keyword score; 97 of 100 candidates share an LLM score,
+      so the tie-break accounts for the whole difference" --- which is the more
+      interesting option, because a reader learns that LLM rubric scores are
+      too coarse to rank a cohort on their own; or
+  (b) report only the 0.6087 figure, state the tie-break in the methods, and
+      drop the m4 row.
+
+Option (a) is recommended. It is also a finding worth a sentence in the
+discussion: a 0-25 integer rubric cannot separate 100 candidates, so whatever
+breaks its ties is doing the ranking.
+
+FRAGILITY WORTH ONE LINE IN THE METHODS. m4_baselines.py:163 picks the role with
+`max(roles, key=len(requirements))`. Two roles tie at five requirements, so the
+winner is whichever `data/roles.json` lists first. It is deterministic today but
+it is not pinned, and a reordered JSON file would silently change the baseline
+query. Name the role explicitly instead.
+
+--------------------------------------------------------------------------------
+12.2  RESOLVED --- the baseline role is the DATA ENGINEER. The paper's role
+      name is right; its requirements list is wrong.
+--------------------------------------------------------------------------------
+The report flagged this as "text says data-engineer but lists the
+backend-developer requirements" and asked which was used. It is the
+data engineer:
+
+    m4_baselines.py:163 selects  amazon_data_engineer
+      title        Junior Data Engineer
+      requirements Python, SQL, ETL, Pandas, AWS basics
+
+For contrast, the other five-requirement role:
+
+      amazon_backend_dev
+      requirements Python, Java, APIs, Databases, System design
+
+So the fix is to CORRECT THE FIVE REQUIREMENTS to Python, SQL, ETL, Pandas and
+AWS basics, and to keep the role name as it stands. Do not rename the role to
+backend developer --- that would make the text wrong in the other direction.
+
+--------------------------------------------------------------------------------
+12.3  RESOLVED --- ten hard negatives, not five. The error was in
+      SECURITY-AND-DATA-SAFETY.md, and it is now fixed there.
+--------------------------------------------------------------------------------
+    metrics.corpora.BENIGN                    18
+      of which difficulty == "hard"           10
+    ATTACKS                                   31
+
+The arithmetic settles it: `false_positive_rate_hard_negatives = 0.40` carries
+the note "4/10". Five hard negatives would have made 0.40 impossible to express.
+The paper's value of ten is correct; my security document said five and was
+wrong. Fixed 2026-10-11.
+
+--------------------------------------------------------------------------------
+12.4  STALE, NOT WRONG --- the result files DO reconcile. The report was
+      reading an earlier harness run.
+--------------------------------------------------------------------------------
+Re-run of 2026-10-11 against the current tree:
+
+    quantity                     report saw     now        paper says
+    results.json quantities           --        243            243  OK
+    provenance.csv rows              204        243            243  OK
+    unavailable items                 14         16             16  OK
+    m1 integrity scenarios             8          9              9  OK
+
+Nothing needs changing in the paper for this item. The supplied `research
+paper/results/` tree has been regenerated and committed, so the files a reviewer
+downloads now match the numbers the paper prints.
+
+--------------------------------------------------------------------------------
+12.5  NEW AND URGENT --- the artefact counts in the paper are now STALE.
+--------------------------------------------------------------------------------
+Fixing the microphone required new tests, which moved every count:
+
+    paper says            ->  2026-10-11
+    371 collected cases   ->  404       (and `404 passed` confirms it)
+    15 test files         ->  18
+    358 definitions       ->  385
+    33 source files       ->  34
+
+Re-read all four from results.json before submitting. This is item 5.9's warning
+in practice: these are the only numbers in the paper that change without anyone
+touching the paper.
+
+--------------------------------------------------------------------------------
+12.6  STILL OPEN --- not resolvable from code
+--------------------------------------------------------------------------------
+Everything else in the report's 26-row checklist stands as written. In
+particular these cannot be closed by inspecting the repository and must be
+settled by the authors:
+
+  * the four author-block fields, the e-mail addresses, the CPU model and RAM,
+    the repository URL, the live-run date, and the acknowledgment and
+    AI-disclosure statement
+  * the eleven missing citations (faster-whisper, YuNet, SFace, MediaPipe,
+    YOLO11n/ultralytics, scrypt, GDPR, the EU AI Act, and the original sources
+    for NDCG, Kendall's tau-b, BM25 and TF-IDF)
+  * references [1], [2] and [5] --- the publisher records, not the project files
+  * the Section II-D literature gap on video interviewing, LLM-as-judge validity
+    and remote proctoring
+  * Fig. 8's legend overlapping two data labels (regenerate the figure)
+  * whether the Fig. 9 trade-off panel should be added
+  * the C++/"C" boundary case: the fragment does contain a standalone "C", so
+    the literal match is defensible. This is a labelling question, not a matcher
+    defect --- decide which it is and say so.

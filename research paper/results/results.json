@@ -1,16 +1,16 @@
 {
   "environment": {
-    "measured_at_utc": "2026-09-27T03:27:43+00:00",
-    "git_commit": "11b9495",
+    "measured_at_utc": "2026-10-11T11:23:23+00:00",
+    "git_commit": "3520155",
     "python": "3.12.10",
     "platform": "Windows 11",
     "machine": "AMD64",
     "cpu": "Intel64 Family 6 Model 158 Stepping 10, GenuineIntel",
     "note": "All latency figures are single-machine, CPU-only, and measured with the fake LLM provider so that no network time is included. They bound the portal's own overhead; they are not model latencies.",
     "environment_overrides": {
-      "DATABASE_PATH": "C:\\Users\\VK5B64~1\\AppData\\Local\\Temp\\portal-metrics-61evtqmp\\metrics.db",
-      "MEDIA_DIR": "C:\\Users\\VK5B64~1\\AppData\\Local\\Temp\\portal-metrics-61evtqmp\\media",
-      "UPLOAD_DIR": "C:\\Users\\VK5B64~1\\AppData\\Local\\Temp\\portal-metrics-61evtqmp\\uploads",
+      "DATABASE_PATH": "C:\\Users\\VK5B64~1\\AppData\\Local\\Temp\\portal-metrics-7939appz\\metrics.db",
+      "MEDIA_DIR": "C:\\Users\\VK5B64~1\\AppData\\Local\\Temp\\portal-metrics-7939appz\\media",
+      "UPLOAD_DIR": "C:\\Users\\VK5B64~1\\AppData\\Local\\Temp\\portal-metrics-7939appz\\uploads",
       "LLM_PROVIDER": "fake",
       "STT_PROVIDER": "disabled",
       "TTS_PROVIDER": "disabled",
@@ -19,7 +19,7 @@
       "ADMIN_PASSWORD": "metrics-harness-1234",
       "RECRUITER_INVITE_CODE": "metrics-invite-code"
     },
-    "throwaway_root": "C:\\Users\\VK5B64~1\\AppData\\Local\\Temp\\portal-metrics-61evtqmp"
+    "throwaway_root": "C:\\Users\\VK5B64~1\\AppData\\Local\\Temp\\portal-metrics-7939appz"
   },
   "sections": [
     {
@@ -7040,7 +7040,7 @@
       "measurements": [
         {
           "name": "source_files",
-          "value": 33,
+          "value": 34,
           "unit": "files",
           "kind": "measured",
           "source": "metrics.m7_codebase",
@@ -7048,14 +7048,14 @@
         },
         {
           "name": "source_lines",
-          "value": 10423,
+          "value": 10911,
           "unit": "lines",
           "kind": "measured",
           "source": "metrics.m7_codebase"
         },
         {
           "name": "source_code_lines",
-          "value": 8361,
+          "value": 8725,
           "unit": "lines",
           "kind": "measured",
           "source": "metrics.m7_codebase",
@@ -7063,7 +7063,7 @@
         },
         {
           "name": "test_functions",
-          "value": 358,
+          "value": 385,
           "unit": "tests",
           "kind": "measured",
           "source": "metrics.m7_codebase (def test_* across tests/)",
@@ -7071,22 +7071,22 @@
         },
         {
           "name": "test_cases",
-          "value": 371,
+          "value": 404,
           "unit": "cases",
           "kind": "measured",
           "source": "metrics.m7_codebase (definitions expanded by parametrize)",
-          "note": "definitions expanded by their @pytest.mark.parametrize argument lists, so 13 of these are expansions of the definitions above. This is the number to quote next to a pass count, because it is the number pytest collects \u2014 verified equal to `pytest --collect-only` on 2026-09-27."
+          "note": "definitions expanded by their @pytest.mark.parametrize argument lists, so 19 of these are expansions of the definitions above. This is the number to quote next to a pass count, because it is the number pytest collects \u2014 verified equal to `pytest --collect-only` on 2026-09-27."
         },
         {
           "name": "test_files",
-          "value": 15,
+          "value": 18,
           "unit": "files",
           "kind": "measured",
           "source": "metrics.m7_codebase"
         },
         {
           "name": "test_to_source_line_ratio",
-          "value": 0.428,
+          "value": 0.457,
           "kind": "derived",
           "source": "metrics.m7_codebase",
           "note": "test code lines per line of source code"
@@ -7161,7 +7161,7 @@
         },
         {
           "name": "prompt_templates",
-          "value": 5,
+          "value": 6,
           "unit": "files",
           "kind": "measured",
           "source": "prompts",
@@ -7224,23 +7224,23 @@
           {
             "package": "core",
             "files": 7,
-            "lines": 1524,
-            "code_lines": 1188,
-            "comment_and_blank_lines": 336
+            "lines": 1555,
+            "code_lines": 1212,
+            "comment_and_blank_lines": 343
           },
           {
             "package": "services",
             "files": 10,
-            "lines": 4225,
-            "code_lines": 3393,
-            "comment_and_blank_lines": 832
+            "lines": 4424,
+            "code_lines": 3532,
+            "comment_and_blank_lines": 892
           },
           {
             "package": "llm",
             "files": 6,
-            "lines": 1102,
-            "code_lines": 901,
-            "comment_and_blank_lines": 201
+            "lines": 1152,
+            "code_lines": 934,
+            "comment_and_blank_lines": 218
           },
           {
             "package": "proctoring",
@@ -7251,10 +7251,10 @@
           },
           {
             "package": "scripts",
-            "files": 4,
-            "lines": 2230,
-            "code_lines": 1827,
-            "comment_and_blank_lines": 403
+            "files": 5,
+            "lines": 2438,
+            "code_lines": 1995,
+            "comment_and_blank_lines": 443
           }
         ],
         "tests": [
@@ -7281,10 +7281,10 @@
           },
           {
             "file": "test_interview.py",
-            "tests": 36,
-            "cases": 36,
-            "lines": 755,
-            "code_lines": 536
+            "tests": 37,
+            "cases": 37,
+            "lines": 782,
+            "code_lines": 556
           },
           {
             "file": "test_auth.py",
@@ -7329,6 +7329,13 @@
             "code_lines": 170
           },
           {
+            "file": "test_draft_answer.py",
+            "tests": 12,
+            "cases": 16,
+            "lines": 173,
+            "code_lines": 118
+          },
+          {
             "file": "test_recording.py",
             "tests": 11,
             "cases": 11,
@@ -7344,10 +7351,10 @@
           },
           {
             "file": "test_interview_room.py",
-            "tests": 7,
-            "cases": 7,
-            "lines": 148,
-            "code_lines": 104
+            "tests": 8,
+            "cases": 8,
+            "lines": 159,
+            "code_lines": 111
           },
           {
             "file": "test_llm_gemini.py",
@@ -7355,6 +7362,20 @@
             "cases": 7,
             "lines": 113,
             "code_lines": 86
+          },
+          {
+            "file": "test_voice_answer_review.py",
+            "tests": 7,
+            "cases": 7,
+            "lines": 204,
+            "code_lines": 134
+          },
+          {
+            "file": "test_mic_capture.py",
+            "tests": 6,
+            "cases": 8,
+            "lines": 172,
+            "code_lines": 130
           },
           {
             "file": "test_db_migration.py",
@@ -7688,6 +7709,17 @@
               "{requirements}",
               "{resume_text}",
               "{values}"
+            ]
+          },
+          {
+            "template": "interview_draft_answer.txt",
+            "bytes": 1178,
+            "lines": 31,
+            "placeholders": [
+              "{max_words}",
+              "{min_words}",
+              "{question}",
+              "{role_title}"
             ]
           },
           {
@@ -8305,22 +8337,22 @@
           },
           {
             "module": "services/guardrail_service.py",
-            "line": 276,
+            "line": 289,
             "schema_constrained": true
           },
           {
             "module": "services/interview_service.py",
-            "line": 835,
+            "line": 1014,
             "schema_constrained": false
           },
           {
             "module": "services/interview_service.py",
-            "line": 1305,
+            "line": 1484,
             "schema_constrained": false
           },
           {
             "module": "services/interview_service.py",
-            "line": 1549,
+            "line": 1728,
             "schema_constrained": false
           }
         ],
@@ -8473,7 +8505,7 @@
         },
         {
           "name": "pdf_text_extraction_p50_ms",
-          "value": 51.0272,
+          "value": 51.5513,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8481,14 +8513,14 @@
         },
         {
           "name": "pdf_text_extraction_p95_ms",
-          "value": 51.3436,
+          "value": 54.0312,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "clean_text_p50_ms",
-          "value": 0.06,
+          "value": 0.0429,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8496,14 +8528,14 @@
         },
         {
           "name": "clean_text_p95_ms",
-          "value": 0.0606,
+          "value": 0.0437,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "ats_score_p50_ms",
-          "value": 0.097,
+          "value": 0.0752,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8511,14 +8543,14 @@
         },
         {
           "name": "ats_score_p95_ms",
-          "value": 0.1484,
+          "value": 0.0765,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "ats_score_long_resume_p50_ms",
-          "value": 0.373,
+          "value": 0.278,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8526,28 +8558,28 @@
         },
         {
           "name": "ats_score_long_resume_p95_ms",
-          "value": 0.4227,
+          "value": 0.3529,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "word_count_p50_ms",
-          "value": 0.0029,
+          "value": 0.0044,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "word_count_p95_ms",
-          "value": 0.0033,
+          "value": 0.0046,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "sha256_of_resume_p50_ms",
-          "value": 0.0022,
+          "value": 0.0023,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8555,14 +8587,14 @@
         },
         {
           "name": "sha256_of_resume_p95_ms",
-          "value": 0.0023,
+          "value": 0.0026,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "strip_injections_clean_p50_ms",
-          "value": 0.0828,
+          "value": 0.0949,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8570,14 +8602,14 @@
         },
         {
           "name": "strip_injections_clean_p95_ms",
-          "value": 0.0835,
+          "value": 0.0957,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "strip_injections_hostile_p50_ms",
-          "value": 0.104,
+          "value": 0.1172,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8585,28 +8617,28 @@
         },
         {
           "name": "strip_injections_hostile_p95_ms",
-          "value": 0.1049,
+          "value": 0.2183,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "sanitize_resume_p50_ms",
-          "value": 0.1057,
+          "value": 0.1033,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "sanitize_resume_p95_ms",
-          "value": 0.1078,
+          "value": 0.1051,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "check_answer_tier1_p50_ms",
-          "value": 0.0542,
+          "value": 0.0467,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8614,7 +8646,7 @@
         },
         {
           "name": "check_answer_tier1_p95_ms",
-          "value": 0.0688,
+          "value": 0.0474,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
@@ -8629,14 +8661,14 @@
         },
         {
           "name": "compute_integrity_score_0_events_p95_ms",
-          "value": 0.001,
+          "value": 0.0009,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "compute_integrity_score_10_events_p50_ms",
-          "value": 0.0053,
+          "value": 0.005,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8644,14 +8676,14 @@
         },
         {
           "name": "compute_integrity_score_10_events_p95_ms",
-          "value": 0.0231,
+          "value": 0.0051,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "compute_integrity_score_50_events_p50_ms",
-          "value": 0.0183,
+          "value": 0.0185,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8659,14 +8691,14 @@
         },
         {
           "name": "compute_integrity_score_50_events_p95_ms",
-          "value": 0.0225,
+          "value": 0.0187,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "compute_integrity_score_200_events_p50_ms",
-          "value": 0.0676,
+          "value": 0.0693,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8674,14 +8706,14 @@
         },
         {
           "name": "compute_integrity_score_200_events_p95_ms",
-          "value": 0.068,
+          "value": 0.0696,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "rank_10_candidates_p50_ms",
-          "value": 0.0368,
+          "value": 0.0365,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8689,14 +8721,14 @@
         },
         {
           "name": "rank_10_candidates_p95_ms",
-          "value": 0.0371,
+          "value": 0.122,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "rank_100_candidates_p50_ms",
-          "value": 0.3726,
+          "value": 0.4223,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8704,7 +8736,7 @@
         },
         {
           "name": "rank_100_candidates_p95_ms",
-          "value": 0.513,
+          "value": 0.4374,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
@@ -8726,7 +8758,7 @@
         },
         {
           "name": "hash_password_scrypt_p50_ms",
-          "value": 119.3535,
+          "value": 122.2018,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8734,14 +8766,14 @@
         },
         {
           "name": "hash_password_scrypt_p95_ms",
-          "value": 120.8709,
+          "value": 123.8154,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "verify_password_scrypt_p50_ms",
-          "value": 119.3121,
+          "value": 121.4784,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8749,7 +8781,7 @@
         },
         {
           "name": "verify_password_scrypt_p95_ms",
-          "value": 120.9693,
+          "value": 122.8769,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
@@ -8771,7 +8803,7 @@
         },
         {
           "name": "register_candidate_p50_ms",
-          "value": 120.9168,
+          "value": 123.1614,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8779,14 +8811,14 @@
         },
         {
           "name": "register_candidate_p95_ms",
-          "value": 122.9521,
+          "value": 129.3952,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "apply_no_model_p50_ms",
-          "value": 0.4524,
+          "value": 0.435,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8794,14 +8826,14 @@
         },
         {
           "name": "apply_no_model_p95_ms",
-          "value": 0.5041,
+          "value": 0.5816,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "screen_fake_model_p50_ms",
-          "value": 0.5056,
+          "value": 0.4836,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8809,14 +8841,14 @@
         },
         {
           "name": "screen_fake_model_p95_ms",
-          "value": 0.73,
+          "value": 0.6,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "fused_for_role_query_p50_ms",
-          "value": 0.0596,
+          "value": 0.0592,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8824,14 +8856,14 @@
         },
         {
           "name": "fused_for_role_query_p95_ms",
-          "value": 0.0633,
+          "value": 0.0677,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "ranked_for_role_query_p50_ms",
-          "value": 0.1698,
+          "value": 0.1708,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8839,7 +8871,7 @@
         },
         {
           "name": "ranked_for_role_query_p95_ms",
-          "value": 0.1767,
+          "value": 0.1735,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
@@ -8849,7 +8881,7 @@
           "value": "register_candidate",
           "kind": "derived",
           "source": "metrics.m6_latency",
-          "note": "120.92 ms at p50. Everything in the scoring path is sub-millisecond; what costs time is I/O and the KDF. The design consequence is that the pipeline's latency is entirely the model's, which is exactly why the model figure below is not guessed."
+          "note": "123.16 ms at p50. Everything in the scoring path is sub-millisecond; what costs time is I/O and the KDF. The design consequence is that the pipeline's latency is entirely the model's, which is exactly why the model figure below is not guessed."
         },
         {
           "name": "offline_stages_are_deterministic",
@@ -8888,108 +8920,108 @@
           {
             "stage": "pdf_text_extraction",
             "n": 10,
-            "p50_ms": 51.0272,
-            "p95_ms": 51.3436,
-            "mean_ms": 50.8362,
-            "min_ms": 49.6906,
-            "max_ms": 51.427,
+            "p50_ms": 51.5513,
+            "p95_ms": 54.0312,
+            "mean_ms": 51.8926,
+            "min_ms": 50.7489,
+            "max_ms": 55.4187,
             "note": "pymupdf on a real 812 KB, 9-page PDF (this paper's own draft \u2014 the only real PDF checked into the repo)"
           },
           {
             "stage": "clean_text",
             "n": 40,
-            "p50_ms": 0.06,
-            "p95_ms": 0.0606,
-            "mean_ms": 0.0601,
-            "min_ms": 0.0595,
-            "max_ms": 0.0632,
+            "p50_ms": 0.0429,
+            "p95_ms": 0.0437,
+            "mean_ms": 0.0435,
+            "min_ms": 0.0425,
+            "max_ms": 0.0617,
             "note": "546 chars"
           },
           {
             "stage": "ats_score",
             "n": 40,
-            "p50_ms": 0.097,
-            "p95_ms": 0.1484,
-            "mean_ms": 0.1041,
-            "min_ms": 0.0935,
-            "max_ms": 0.169,
+            "p50_ms": 0.0752,
+            "p95_ms": 0.0765,
+            "mean_ms": 0.0754,
+            "min_ms": 0.0742,
+            "max_ms": 0.0778,
             "note": "5 requirements, 546 chars"
           },
           {
             "stage": "ats_score_long_resume",
             "n": 40,
-            "p50_ms": 0.373,
-            "p95_ms": 0.4227,
-            "mean_ms": 0.3784,
-            "min_ms": 0.3684,
-            "max_ms": 0.4505,
+            "p50_ms": 0.278,
+            "p95_ms": 0.3529,
+            "mean_ms": 0.2947,
+            "min_ms": 0.2735,
+            "max_ms": 0.7076,
             "note": "3276 chars \u2014 the pre-filter scales linearly"
           },
           {
             "stage": "word_count",
             "n": 40,
-            "p50_ms": 0.0029,
-            "p95_ms": 0.0033,
-            "mean_ms": 0.003,
-            "min_ms": 0.0028,
-            "max_ms": 0.0036,
+            "p50_ms": 0.0044,
+            "p95_ms": 0.0046,
+            "mean_ms": 0.0044,
+            "min_ms": 0.0042,
+            "max_ms": 0.0048,
             "note": ""
           },
           {
             "stage": "sha256_of_resume",
             "n": 40,
-            "p50_ms": 0.0022,
-            "p95_ms": 0.0023,
-            "mean_ms": 0.0022,
-            "min_ms": 0.0021,
-            "max_ms": 0.0024,
+            "p50_ms": 0.0023,
+            "p95_ms": 0.0026,
+            "mean_ms": 0.0023,
+            "min_ms": 0.0022,
+            "max_ms": 0.0027,
             "note": "dedup / tamper-evidence hash stored on the application row"
           },
           {
             "stage": "strip_injections_clean",
             "n": 40,
-            "p50_ms": 0.0828,
-            "p95_ms": 0.0835,
-            "mean_ms": 0.083,
-            "min_ms": 0.0824,
-            "max_ms": 0.0864,
+            "p50_ms": 0.0949,
+            "p95_ms": 0.0957,
+            "mean_ms": 0.095,
+            "min_ms": 0.0939,
+            "max_ms": 0.0972,
             "note": "5 regex families over a clean resume"
           },
           {
             "stage": "strip_injections_hostile",
             "n": 40,
-            "p50_ms": 0.104,
-            "p95_ms": 0.1049,
-            "mean_ms": 0.1041,
-            "min_ms": 0.1033,
-            "max_ms": 0.1061,
+            "p50_ms": 0.1172,
+            "p95_ms": 0.2183,
+            "mean_ms": 0.1242,
+            "min_ms": 0.1011,
+            "max_ms": 0.3192,
             "note": "same resume with two injection payloads appended"
           },
           {
             "stage": "sanitize_resume",
             "n": 40,
-            "p50_ms": 0.1057,
-            "p95_ms": 0.1078,
-            "mean_ms": 0.1064,
-            "min_ms": 0.1053,
-            "max_ms": 0.1235,
+            "p50_ms": 0.1033,
+            "p95_ms": 0.1051,
+            "mean_ms": 0.104,
+            "min_ms": 0.103,
+            "max_ms": 0.1212,
             "note": ""
           },
           {
             "stage": "check_answer_tier1",
             "n": 40,
-            "p50_ms": 0.0542,
-            "p95_ms": 0.0688,
-            "mean_ms": 0.0585,
-            "min_ms": 0.0536,
-            "max_ms": 0.1428,
+            "p50_ms": 0.0467,
+            "p95_ms": 0.0474,
+            "mean_ms": 0.0468,
+            "min_ms": 0.0461,
+            "max_ms": 0.0494,
             "note": "tier 1 only. Tier 2 adds one model round trip and is the only path on which a candidate's answer leaves the process."
           },
           {
             "stage": "compute_integrity_score_0_events",
             "n": 40,
             "p50_ms": 0.0009,
-            "p95_ms": 0.001,
+            "p95_ms": 0.0009,
             "mean_ms": 0.0009,
             "min_ms": 0.0008,
             "max_ms": 0.0011,
@@ -8998,51 +9030,51 @@
           {
             "stage": "compute_integrity_score_10_events",
             "n": 40,
-            "p50_ms": 0.0053,
-            "p95_ms": 0.0231,
-            "mean_ms": 0.0087,
-            "min_ms": 0.0048,
-            "max_ms": 0.0878,
+            "p50_ms": 0.005,
+            "p95_ms": 0.0051,
+            "mean_ms": 0.005,
+            "min_ms": 0.0049,
+            "max_ms": 0.0053,
             "note": "10 proctoring events"
           },
           {
             "stage": "compute_integrity_score_50_events",
             "n": 40,
-            "p50_ms": 0.0183,
-            "p95_ms": 0.0225,
-            "mean_ms": 0.0194,
-            "min_ms": 0.0175,
-            "max_ms": 0.0459,
+            "p50_ms": 0.0185,
+            "p95_ms": 0.0187,
+            "mean_ms": 0.0185,
+            "min_ms": 0.0183,
+            "max_ms": 0.0209,
             "note": "50 proctoring events"
           },
           {
             "stage": "compute_integrity_score_200_events",
             "n": 40,
-            "p50_ms": 0.0676,
-            "p95_ms": 0.068,
-            "mean_ms": 0.0676,
-            "min_ms": 0.067,
-            "max_ms": 0.0702,
+            "p50_ms": 0.0693,
+            "p95_ms": 0.0696,
+            "mean_ms": 0.0693,
+            "min_ms": 0.0687,
+            "max_ms": 0.0716,
             "note": "200 proctoring events"
           },
           {
             "stage": "rank_10_candidates",
             "n": 40,
-            "p50_ms": 0.0368,
-            "p95_ms": 0.0371,
-            "mean_ms": 0.0369,
-            "min_ms": 0.0366,
-            "max_ms": 0.0393,
+            "p50_ms": 0.0365,
+            "p95_ms": 0.122,
+            "mean_ms": 0.0513,
+            "min_ms": 0.0363,
+            "max_ms": 0.2539,
             "note": "fused S_final over 10 applications"
           },
           {
             "stage": "rank_100_candidates",
             "n": 40,
-            "p50_ms": 0.3726,
-            "p95_ms": 0.513,
-            "mean_ms": 0.3971,
-            "min_ms": 0.3698,
-            "max_ms": 0.6637,
+            "p50_ms": 0.4223,
+            "p95_ms": 0.4374,
+            "mean_ms": 0.422,
+            "min_ms": 0.3684,
+            "max_ms": 0.7966,
             "note": "fused S_final over 100 applications"
           },
           {
@@ -9051,28 +9083,28 @@
             "p50_ms": 0.0006,
             "p95_ms": 0.0007,
             "mean_ms": 0.0006,
-            "min_ms": 0.0006,
-            "max_ms": 0.0008,
+            "min_ms": 0.0005,
+            "max_ms": 0.0009,
             "note": "one candidate \u2014 the arithmetic the ranking is built from"
           },
           {
             "stage": "hash_password_scrypt",
             "n": 8,
-            "p50_ms": 119.3535,
-            "p95_ms": 120.8709,
-            "mean_ms": 119.4979,
-            "min_ms": 118.5896,
-            "max_ms": 121.5135,
+            "p50_ms": 122.2018,
+            "p95_ms": 123.8154,
+            "mean_ms": 122.3567,
+            "min_ms": 120.8843,
+            "max_ms": 123.8849,
             "note": "scrypt n=2^15 r=8 p=1 dklen=32 \u2014 a deliberate cost. At this work factor an offline attacker is bounded by the same arithmetic the login is."
           },
           {
             "stage": "verify_password_scrypt",
             "n": 8,
-            "p50_ms": 119.3121,
-            "p95_ms": 120.9693,
-            "mean_ms": 119.5223,
-            "min_ms": 118.5837,
-            "max_ms": 121.3856,
+            "p50_ms": 121.4784,
+            "p95_ms": 122.8769,
+            "mean_ms": 121.7045,
+            "min_ms": 120.6929,
+            "max_ms": 123.0691,
             "note": "constant-time comparison via hmac.compare_digest"
           },
           {
@@ -9082,57 +9114,57 @@
             "p95_ms": 0.0015,
             "mean_ms": 0.0012,
             "min_ms": 0.001,
-            "max_ms": 0.0027,
+            "max_ms": 0.0025,
             "note": "runs on every authenticated request; sha256 rather than scrypt because the token already has 256 bits of entropy and needs no stretching"
           },
           {
             "stage": "register_candidate",
             "n": 6,
-            "p50_ms": 120.9168,
-            "p95_ms": 122.9521,
-            "mean_ms": 121.1106,
-            "min_ms": 119.4342,
-            "max_ms": 123.1816,
+            "p50_ms": 123.1614,
+            "p95_ms": 129.3952,
+            "mean_ms": 124.3933,
+            "min_ms": 121.4882,
+            "max_ms": 130.6563,
             "note": "dominated by the scrypt KDF above, plus one INSERT"
           },
           {
             "stage": "apply_no_model",
             "n": 15,
-            "p50_ms": 0.4524,
-            "p95_ms": 0.5041,
-            "mean_ms": 0.4633,
-            "min_ms": 0.44,
-            "max_ms": 0.5223,
+            "p50_ms": 0.435,
+            "p95_ms": 0.5816,
+            "mean_ms": 0.4672,
+            "min_ms": 0.4119,
+            "max_ms": 0.6155,
             "note": "sanitise + keyword score + INSERT. Runs with no network call at all, which is why a throttled provider can never lose a candidate's submission."
           },
           {
             "stage": "screen_fake_model",
             "n": 15,
-            "p50_ms": 0.5056,
-            "p95_ms": 0.73,
-            "mean_ms": 0.5597,
-            "min_ms": 0.481,
-            "max_ms": 0.7823,
+            "p50_ms": 0.4836,
+            "p95_ms": 0.6,
+            "mean_ms": 0.527,
+            "min_ms": 0.4671,
+            "max_ms": 0.6218,
             "note": "prompt construction + JSON parse + rubric normalisation + UPDATE, with the provider stubbed. Add the model's own latency for a real figure."
           },
           {
             "stage": "fused_for_role_query",
             "n": 15,
-            "p50_ms": 0.0596,
-            "p95_ms": 0.0633,
-            "mean_ms": 0.0602,
-            "min_ms": 0.0592,
-            "max_ms": 0.0636,
+            "p50_ms": 0.0592,
+            "p95_ms": 0.0677,
+            "mean_ms": 0.0608,
+            "min_ms": 0.0585,
+            "max_ms": 0.0793,
             "note": "the LEFT JOIN plus S_final over every application on the role"
           },
           {
             "stage": "ranked_for_role_query",
             "n": 15,
-            "p50_ms": 0.1698,
-            "p95_ms": 0.1767,
-            "mean_ms": 0.1712,
-            "min_ms": 0.1685,
-            "max_ms": 0.1825,
+            "p50_ms": 0.1708,
+            "p95_ms": 0.1735,
+            "mean_ms": 0.171,
+            "min_ms": 0.1694,
+            "max_ms": 0.1743,
             "note": "the shipped resume-only ORDER BY, for comparison"
           }
         ],

@@ -55,11 +55,19 @@ _KEY_FLASH = "_room_flash"            # (kind, msg) | None
 _KEY_PROCTOR = "_room_proctor"        # ProctorSession | None
 _KEY_LAST_FRAME = "_room_last_frame"  # [np.ndarray | None]: newest preview frame
 _KEY_DRAFT = "_room_draft"            # str | None: sandbox draft awaiting the box
+_KEY_PENDING = "_room_pending"        # dict | None: transcribed take awaiting review
+_KEY_REVIEW = "_room_review"          # str: the editable transcript widget
+_KEY_WAS_RECORDING = "_room_was_rec"  # bool: to catch the Stop edge
 
 # Shorter than this and Whisper either returns nothing or invents a stock phrase
 # ("Thank you.", "Okay."). The second failure mode is the dangerous one, so the
 # clip is refused before it reaches the model rather than after.
 MIN_ANSWER_SECONDS = 1.0
+
+# How much real audio has to land before the cue goes green. Low enough not to
+# add noticeable delay, high enough that it cannot fire on the first stray frame
+# of a connection that is still negotiating.
+CUE_WARMUP_SECONDS = 0.4
 
 
 # --------------------------------------------------------------------------- #
@@ -610,7 +618,7 @@ def _phase_interview(user: Any, interview: Interview) -> None:
     col_capture, col_typed = st.columns([1, 1], gap="large")
 
     with col_capture:
-        _webrtc_capture_panel(interview)
+        _webrtc_capture_panel(user, interview, turn)
 
     with col_typed:
         _typed_answer_panel(user, interview, turn)
@@ -651,11 +659,11 @@ def _finalize_proctoring(interview_id: int) -> None:
         st.session_state.pop(_KEY_LAST_FRAME, None)
 
 
-def _webrtc_capture_panel(interview: Interview) -> None:
+def _webrtc_capture_panel(user: Any, interview: Interview, turn: Turn) -> None:
     st.markdown("##### 🎙 Spoken answer")
     st.caption(
-        "Press **Start** to record. Press **Stop**, then **Submit recording** "
-        "when you are done."
+        "Press **Start**, wait for the green *Speak now*, then answer. Press "
+        "**Stop** and your answer is transcribed for you to check."
     )
     p = _proctor(interview.id)
     try:
@@ -699,14 +707,16 @@ def _webrtc_capture_panel(interview: Interview) -> None:
         st.session_state[_KEY_WR_CTX] = ctx
 
         recording = ctx is not None and ctx.state.playing
-        captured = _buffered_seconds()
-        if recording:
-            st.info(f"🔴 Recording… {captured:.1f}s captured")
-        elif captured > 0:
-            # Seconds, not frame count. The buffer holds resampled chunks whose
-            # count is an artefact of the network's framing, so "412 frames"
-            # told a candidate nothing about whether they had actually spoken.
-            st.success(f"Recording ready — {captured:.1f}s. Submit it on the right.")
+        _cue(recording)
+
+        # Stop was just pressed: transcribe now rather than at submit time, so
+        # the candidate reads the transcript before deciding to send it.
+        # streamlit-webrtc reruns the script when its play state changes, which
+        # is what makes this edge detectable without polling.
+        was_recording = bool(st.session_state.get(_KEY_WAS_RECORDING))
+        st.session_state[_KEY_WAS_RECORDING] = recording
+        if was_recording and not recording and _buffered_seconds() > 0:
+            _transcribe_now(interview, turn)
 
         if p is not None and not recording:
             # Camera off mid-interview is worth saying plainly — it is the one
@@ -716,6 +726,199 @@ def _webrtc_capture_panel(interview: Interview) -> None:
     except Exception as exc:
         log.debug("webrtc unavailable: %s", exc)
         st.info("Camera/microphone not available — use the text box on the right.")
+
+    _transcript_review_panel(user, interview, turn)
+
+
+@st.fragment(run_every="0.5s")
+def _cue(recording: bool) -> None:
+    """Tell the candidate when the microphone is actually live.
+
+    There is a real gap between pressing *Start* and audio arriving — ICE
+    negotiation, then the browser's own getUserMedia prompt and device warm-up.
+    A candidate who starts talking into that gap loses their first sentence and
+    has no way to know it happened.
+
+    The honest signal is not ``ctx.state.playing``, which flips as soon as the
+    peer connection is up; it is whether resampled samples are landing in the
+    buffer. So the cue waits for real audio before it goes green.
+
+    This is a fragment on a timer because the buffer fills on the media thread,
+    which cannot trigger a rerun. Re-running the whole script every half second
+    would tear down and rebuild the webrtc component; a fragment re-runs only
+    this block, so the camera stream is untouched.
+    """
+    captured = _buffered_seconds()
+    if not recording:
+        if captured > 0:
+            st.success(f"✅ Captured {captured:.1f}s — check the transcript below.")
+        else:
+            st.caption("🎙 Idle — press **Start** above when you are ready.")
+        return
+
+    if captured < CUE_WARMUP_SECONDS:
+        st.warning("⏳ **Connecting — do not speak yet.** Wait for the green cue.")
+    else:
+        st.success(f"🔴 **Speak now** — recording, {captured:.1f}s captured.")
+
+
+def _transcribe_now(interview: Interview, turn: Turn) -> None:
+    """Transcribe the pending buffer and stash it for review.
+
+    Called on the *Stop* edge rather than at submit time. Transcribing at submit
+    meant the candidate sent an answer they had never read — and since Whisper
+    on a bad microphone returns an empty string or an invented stock phrase,
+    that is exactly the moment they most needed to see it.
+
+    Nothing is written to the interview here. The clip and the proctoring
+    analysis are deliberately deferred to submit, so a discarded take leaves no
+    trace: a candidate re-recording because the transcript came out wrong is
+    fixing a microphone, not making an attempt.
+    """
+    samples = _drain_audio()
+    if samples is None or len(samples) == 0:
+        _flash("error", "No audio captured. Try recording again.")
+        st.rerun()
+        return
+
+    rate = stt_module.TARGET_SAMPLE_RATE
+    duration = len(samples) / float(rate)
+    if duration < MIN_ANSWER_SECONDS:
+        _flash(
+            "warning",
+            f"That recording was only {duration:.1f}s. Press **Start**, wait for "
+            "the green cue, and speak for a few seconds.",
+        )
+        st.rerun()
+        return
+
+    with st.spinner("Transcribing your answer…"):
+        try:
+            wav = stt_module.pcm_to_wav_bytes(samples, rate)
+            transcript = stt_module.get_stt().transcribe(wav)
+        except Exception as exc:
+            log.warning("STT failed: %s", exc)
+            _flash("error", "Transcription failed. Please type your answer instead.")
+            st.rerun()
+            return
+
+    if not transcript.ok:
+        _flash("warning", "Could not hear a clear answer. Record again, or type it.")
+        st.rerun()
+        return
+
+    st.session_state[_KEY_PENDING] = {
+        "text": transcript.text,
+        "samples": samples,
+        "rate": rate,
+        "seconds": duration,
+        "seq": turn.seq,
+    }
+    st.rerun()
+
+
+def _transcript_review_panel(user: Any, interview: Interview, turn: Turn) -> None:
+    """Show the transcript, let it be corrected, and submit it.
+
+    The submit button lives here, under the recording it belongs to, rather than
+    in the typed-answer column where it used to sit next to an unrelated text
+    box and a differently-labelled button.
+
+    The transcript is editable because Whisper mishears names, acronyms and
+    numbers, and a candidate who can see the error but not fix it will retype
+    the whole answer instead. An edit changes the provenance, so the stored
+    ``transcript_source`` records it — the recruiter reads the answer as the
+    candidate approved it, and the audit trail still says who wrote which words.
+    """
+    pending = st.session_state.get(_KEY_PENDING)
+    if not pending:
+        return
+    if pending.get("seq") != turn.seq:
+        # A take left over from the previous question must never be submitted
+        # against this one.
+        st.session_state.pop(_KEY_PENDING, None)
+        return
+
+    st.markdown("###### 📝 Your transcribed answer")
+    st.caption(
+        f"{pending['seconds']:.1f}s of audio. Correct anything misheard, then "
+        "submit — or record again."
+    )
+
+    edited = st.text_area(
+        "Transcript",
+        value=pending["text"],
+        key=_KEY_REVIEW,
+        height=150,
+        label_visibility="collapsed",
+    )
+
+    col_send, col_redo = st.columns([2, 1], gap="small")
+    with col_send:
+        if st.button(
+            "Submit voice answer",
+            key="_room_submit_voice",
+            type="primary",
+            use_container_width=True,
+            disabled=not (edited or "").strip(),
+        ):
+            _submit_reviewed(user, interview, turn, edited, pending)
+    with col_redo:
+        if st.button(
+            "Record again",
+            key="_room_rerecord",
+            use_container_width=True,
+            help="Discard this take. Nothing is stored and no attempt is spent.",
+        ):
+            st.session_state.pop(_KEY_PENDING, None)
+            st.session_state.pop(_KEY_REVIEW, None)
+            st.session_state[_KEY_AUDIO_BUF] = []
+            st.rerun()
+
+
+def _submit_reviewed(
+    user: Any,
+    interview: Interview,
+    turn: Turn,
+    text: str,
+    pending: dict[str, Any],
+) -> None:
+    """Store the clip, run the voice analysis, then submit the approved text."""
+    samples = pending["samples"]
+    rate = int(pending["rate"])
+
+    # Only now that the answer is real: a discarded take is a bad microphone,
+    # and neither keeping its audio nor holding it against the candidate would
+    # be right.
+    try:
+        audio_path = recordings.save_answer(
+            interview.id, samples, rate, seq=turn.seq
+        )
+    except Exception as exc:
+        log.warning("Could not store answer audio: %s", exc)
+        audio_path = ""
+
+    p = _proctor(interview.id)
+    if p is not None:
+        try:
+            p.note_answer_audio(samples, rate)
+        except Exception as exc:
+            log.debug("answer audio analysis skipped: %s", exc)
+
+    approved = (text or "").strip()
+    edited = approved != (pending["text"] or "").strip()
+
+    st.session_state.pop(_KEY_PENDING, None)
+    st.session_state.pop(_KEY_REVIEW, None)
+
+    _do_submit(
+        user,
+        interview,
+        turn,
+        approved,
+        transcript_source="whisper_edited" if edited else "whisper",
+        audio_path=audio_path,
+    )
 
 
 def _typed_answer_panel(user: Any, interview: Interview, turn: Turn) -> None:
@@ -738,26 +941,17 @@ def _typed_answer_panel(user: Any, interview: Interview, turn: Turn) -> None:
         placeholder="Write your answer here…",
     )
 
-    col_sub, col_send = st.columns([1, 1], gap="small")
-
-    with col_sub:
-        if st.button(
-            "Submit recording",
-            key="_room_submit_audio",
-            use_container_width=True,
-            disabled=_buffered_seconds() <= 0,
-        ):
-            _submit_audio(user, interview, turn)
-
-    with col_send:
-        if st.button(
-            "Submit typed answer",
-            key="_room_submit_typed",
-            type="primary",
-            use_container_width=True,
-            disabled=not (typed or "").strip(),
-        ):
-            _submit_text(user, interview, turn, typed)
+    # The "Submit recording" button used to live here, beside an unrelated text
+    # box. It is now under the recording it submits, in the left column, and is
+    # labelled "Submit voice answer".
+    if st.button(
+        "Submit typed answer",
+        key="_room_submit_typed",
+        type="primary",
+        use_container_width=True,
+        disabled=not (typed or "").strip(),
+    ):
+        _submit_text(user, interview, turn, typed)
 
     _draft_answer_control(interview, turn)
 
@@ -794,65 +988,6 @@ def _draft_answer_control(interview: Interview, turn: Turn) -> None:
                 return
         st.session_state[_KEY_DRAFT] = draft
         st.rerun()
-
-
-def _submit_audio(user: Any, interview: Interview, turn: Turn) -> None:
-    samples = _drain_audio()
-    if samples is None or len(samples) == 0:
-        _flash("error", "No audio captured. Try recording again.")
-        st.rerun()
-        return
-
-    sample_rate = stt_module.TARGET_SAMPLE_RATE
-
-    # Whisper on a fraction of a second returns either nothing or a hallucinated
-    # stock phrase, and the second is worse: it would be submitted as the
-    # candidate's answer. Catch it here, where we can still say what went wrong,
-    # rather than letting it through as a transcription failure.
-    duration = len(samples) / float(sample_rate)
-    if duration < MIN_ANSWER_SECONDS:
-        _flash(
-            "warning",
-            f"That recording was only {duration:.1f}s. Hold **Start** and speak "
-            "for a few seconds, or type your answer instead.",
-        )
-        st.rerun()
-        return
-
-    with st.spinner("Transcribing your answer…"):
-        try:
-            wav = stt_module.pcm_to_wav_bytes(samples, sample_rate)
-            provider = stt_module.get_stt()
-            transcript = provider.transcribe(wav)
-        except Exception as exc:
-            log.warning("STT failed: %s", exc)
-            _flash("error", "Transcription failed. Please type your answer instead.")
-            st.rerun()
-            return
-
-    if not transcript.ok:
-        _flash("warning", "Could not hear a clear answer. Please try again or type.")
-        st.rerun()
-        return
-
-    # Keep the clip and read it for background speech, both only once the answer
-    # is real. A failed attempt is usually a bad microphone, and neither storing
-    # it nor holding it against the candidate would be right.
-    audio_path = recordings.save_answer(
-        interview.id, samples, sample_rate, seq=turn.seq
-    )
-    p = _proctor(interview.id)
-    if p is not None:
-        p.note_answer_audio(samples, sample_rate)
-
-    _do_submit(
-        user,
-        interview,
-        turn,
-        transcript.text,
-        transcript_source="whisper",
-        audio_path=audio_path,
-    )
 
 
 def _submit_text(user: Any, interview: Interview, turn: Turn, text: str) -> None:

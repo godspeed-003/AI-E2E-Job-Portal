@@ -1,16 +1,16 @@
 {
   "environment": {
-    "measured_at_utc": "2026-10-11T11:36:05+00:00",
-    "git_commit": "0b93173",
+    "measured_at_utc": "2026-10-13T12:11:55+00:00",
+    "git_commit": "c51b84e",
     "python": "3.12.10",
     "platform": "Windows 11",
     "machine": "AMD64",
     "cpu": "Intel64 Family 6 Model 158 Stepping 10, GenuineIntel",
     "note": "All latency figures are single-machine, CPU-only, and measured with the fake LLM provider so that no network time is included. They bound the portal's own overhead; they are not model latencies.",
     "environment_overrides": {
-      "DATABASE_PATH": "C:\\Users\\VK5B64~1\\AppData\\Local\\Temp\\portal-metrics-ms4kdwwo\\metrics.db",
-      "MEDIA_DIR": "C:\\Users\\VK5B64~1\\AppData\\Local\\Temp\\portal-metrics-ms4kdwwo\\media",
-      "UPLOAD_DIR": "C:\\Users\\VK5B64~1\\AppData\\Local\\Temp\\portal-metrics-ms4kdwwo\\uploads",
+      "DATABASE_PATH": "C:\\Users\\VK5B64~1\\AppData\\Local\\Temp\\portal-metrics-r_w2vgh5\\metrics.db",
+      "MEDIA_DIR": "C:\\Users\\VK5B64~1\\AppData\\Local\\Temp\\portal-metrics-r_w2vgh5\\media",
+      "UPLOAD_DIR": "C:\\Users\\VK5B64~1\\AppData\\Local\\Temp\\portal-metrics-r_w2vgh5\\uploads",
       "LLM_PROVIDER": "fake",
       "STT_PROVIDER": "disabled",
       "TTS_PROVIDER": "disabled",
@@ -19,7 +19,7 @@
       "ADMIN_PASSWORD": "metrics-harness-1234",
       "RECRUITER_INVITE_CODE": "metrics-invite-code"
     },
-    "throwaway_root": "C:\\Users\\VK5B64~1\\AppData\\Local\\Temp\\portal-metrics-ms4kdwwo"
+    "throwaway_root": "C:\\Users\\VK5B64~1\\AppData\\Local\\Temp\\portal-metrics-r_w2vgh5"
   },
   "sections": [
     {
@@ -8258,54 +8258,37 @@
         },
         {
           "name": "shipped_schemas_accepted_live",
-          "value": true,
-          "kind": "measured",
+          "kind": "unavailable",
           "source": "metrics.m9_provider_contract._run_live",
-          "note": "2 of 2 accepted against gemini-2.5-flash; every required field present in the reply. Measured live on 2026-09-24T12:54:19+00:00; replayed from live_provider_contract.json because this run had no live provider enabled."
+          "needs": "A live run that reaches the model. All 2 shipped-schema probes failed in transport against gemini-3.8-flash (HTTP 503), so this run cannot say whether the schema is accepted. The two control probes did reach the API and were rejected exactly as expected, so the sanitiser's behaviour is unchanged as far as this run can tell. Re-run when the provider is healthy. Measured live on 2026-10-13T12:00:08+00:00; replayed from live_provider_contract.json because this run had no live provider enabled."
         },
         {
           "name": "pre_fix_schema_rejected_live",
           "value": true,
           "kind": "measured",
           "source": "metrics.m9_provider_contract._run_live",
-          "note": "HTTP 400. The API returns exactly the error llm/gemini.py's docstring quotes \u2014 'response_schema.required[0]: property is not defined' \u2014 so the properties branch of sanitize_schema is load-bearing, measured rather than recalled. Measured live on 2026-09-24T12:54:19+00:00; replayed from live_provider_contract.json because this run had no live provider enabled."
+          "note": "HTTP 400. The API returns exactly the error llm/gemini.py's docstring quotes \u2014 'response_schema.required[0]: property is not defined' \u2014 so the properties branch of sanitize_schema is load-bearing, measured rather than recalled. Measured live on 2026-10-13T12:00:08+00:00; replayed from live_provider_contract.json because this run had no live provider enabled."
         },
         {
           "name": "unsanitised_schema_rejected_live",
           "value": true,
           "kind": "measured",
           "source": "metrics.m9_provider_contract._run_live",
-          "note": "HTTP 400 for a schema carrying additionalProperties: 'Unknown name'. The keyword allow-list is a real adaptation to the provider's dialect, not caution. Measured live on 2026-09-24T12:54:19+00:00; replayed from live_provider_contract.json because this run had no live provider enabled."
-        },
-        {
-          "name": "hosted_api_round_trip_seconds",
-          "value": 4.146,
-          "unit": "s",
-          "kind": "measured",
-          "source": "metrics.m9_provider_contract._run_live",
-          "note": "mean over 2 schema-constrained calls to gemini-2.5-flash (5.309s, 2.983s). This is a hosted-API round trip \u2014 network, queueing and generation together \u2014 and it is NOT the local inference latency the deployability argument needs. It bounds the cloud path only. Measured live on 2026-09-24T12:54:19+00:00; replayed from live_provider_contract.json because this run had no live provider enabled."
-        },
-        {
-          "name": "reasoning_tokens_per_call",
-          "value": 603,
-          "unit": "tokens",
-          "kind": "measured",
-          "source": "usageMetadata.thoughtsTokenCount",
-          "note": "603 reasoning tokens against 324 tokens of visible output across 2 shipped-schema probes \u2014 1.9x the output the system actually uses. They are billed, they are charged against maxOutputTokens, and they never appear in the response body, so a token budget sized from the expected JSON is short by an amount the response does not reveal. A local model run without a reasoning phase does not carry this cost, which cuts the opposite way to the usual cloud-versus-local comparison. Measured live on 2026-09-24T12:54:19+00:00; replayed from live_provider_contract.json because this run had no live provider enabled."
+          "note": "HTTP 400 for a schema carrying additionalProperties: 'Unknown name'. The keyword allow-list is a real adaptation to the provider's dialect, not caution. Measured live on 2026-10-13T12:00:08+00:00; replayed from live_provider_contract.json because this run had no live provider enabled."
         },
         {
           "name": "shipped_budgets_complete_the_response",
           "value": true,
           "kind": "measured",
           "source": "candidates[0].finishReason over the shipped-schema probes",
-          "note": "every probe finished with STOP at the max_output_tokens its production call site passes, so neither shipped budget truncates on a minimal input. Note the failure mode this rules out: a truncated reply still returns HTTP 200 with partial text, so it surfaces as a JSON parse error and a silent re-ask, not as a recognisable budget error. Measured live on 2026-09-24T12:54:19+00:00; replayed from live_provider_contract.json because this run had no live provider enabled."
+          "note": "every probe finished with STOP at the max_output_tokens its production call site passes, so neither shipped budget truncates on a minimal input. Note the failure mode this rules out: a truncated reply still returns HTTP 200 with partial text, so it surfaces as a JSON parse error and a silent re-ask, not as a recognisable budget error. Measured live on 2026-10-13T12:00:08+00:00; replayed from live_provider_contract.json because this run had no live provider enabled."
         },
         {
           "name": "gemini_reports_generation_time",
           "value": false,
           "kind": "measured",
           "source": "usageMetadata in the live response",
-          "note": "the response carries promptTokenCount / candidatesTokenCount / thoughtsTokenCount but no server-side generation duration, so tokens-per-second cannot be computed for this provider without folding the network round trip into the denominator. LLMResult.eval_seconds is left None rather than filled from wall-clock. Measured live on 2026-09-24T12:54:19+00:00; replayed from live_provider_contract.json because this run had no live provider enabled."
+          "note": "the response carries promptTokenCount / candidatesTokenCount / thoughtsTokenCount but no server-side generation duration, so tokens-per-second cannot be computed for this provider without folding the network round trip into the denominator. LLMResult.eval_seconds is left None rather than filled from wall-clock. Measured live on 2026-10-13T12:00:08+00:00; replayed from live_provider_contract.json because this run had no live provider enabled."
         }
       ],
       "tables": {
@@ -8382,32 +8365,32 @@
             "schema": "shipped, sanitised",
             "expected": "accepted",
             "max_output_tokens": 1200,
-            "http_status": 200,
-            "accepted": true,
-            "finish_reason": "STOP",
-            "parsed_as_object": true,
+            "http_status": 503,
+            "accepted": false,
+            "finish_reason": null,
+            "parsed_as_object": false,
             "required_fields_missing": "none",
-            "seconds": 5.309,
-            "prompt_tokens": 27,
-            "output_tokens": 293,
-            "thought_tokens": 371,
-            "error": ""
+            "seconds": 1.372,
+            "prompt_tokens": null,
+            "output_tokens": null,
+            "thought_tokens": null,
+            "error": "{\n  \"error\": {\n    \"code\": 503,\n    \"message\": \"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later"
           },
           {
             "probe": "guardrail_answer_verdict",
             "schema": "shipped, sanitised",
             "expected": "accepted",
             "max_output_tokens": null,
-            "http_status": 200,
-            "accepted": true,
-            "finish_reason": "STOP",
-            "parsed_as_object": true,
+            "http_status": 503,
+            "accepted": false,
+            "finish_reason": null,
+            "parsed_as_object": false,
             "required_fields_missing": "none",
-            "seconds": 2.983,
-            "prompt_tokens": 36,
-            "output_tokens": 31,
-            "thought_tokens": 232,
-            "error": ""
+            "seconds": 2.077,
+            "prompt_tokens": null,
+            "output_tokens": null,
+            "thought_tokens": null,
+            "error": "{\n  \"error\": {\n    \"code\": 503,\n    \"message\": \"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later"
           },
           {
             "probe": "guardrail_answer_verdict",
@@ -8419,7 +8402,7 @@
             "finish_reason": null,
             "parsed_as_object": null,
             "required_fields_missing": "all",
-            "seconds": 0.489,
+            "seconds": 0.509,
             "prompt_tokens": null,
             "output_tokens": null,
             "thought_tokens": null,
@@ -8435,7 +8418,7 @@
             "finish_reason": null,
             "parsed_as_object": null,
             "required_fields_missing": "none",
-            "seconds": 0.407,
+            "seconds": 0.463,
             "prompt_tokens": null,
             "output_tokens": null,
             "thought_tokens": null,
@@ -8505,7 +8488,7 @@
         },
         {
           "name": "pdf_text_extraction_p50_ms",
-          "value": 51.639,
+          "value": 51.9976,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8513,14 +8496,14 @@
         },
         {
           "name": "pdf_text_extraction_p95_ms",
-          "value": 52.6807,
+          "value": 60.0962,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "clean_text_p50_ms",
-          "value": 0.0427,
+          "value": 0.0437,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8528,14 +8511,14 @@
         },
         {
           "name": "clean_text_p95_ms",
-          "value": 0.0432,
+          "value": 0.0856,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "ats_score_p50_ms",
-          "value": 0.0751,
+          "value": 0.0749,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8543,14 +8526,14 @@
         },
         {
           "name": "ats_score_p95_ms",
-          "value": 0.0762,
+          "value": 0.0786,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "ats_score_long_resume_p50_ms",
-          "value": 0.2784,
+          "value": 0.2826,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8558,21 +8541,21 @@
         },
         {
           "name": "ats_score_long_resume_p95_ms",
-          "value": 0.3617,
+          "value": 0.4003,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "word_count_p50_ms",
-          "value": 0.0034,
+          "value": 0.003,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "word_count_p95_ms",
-          "value": 0.0048,
+          "value": 0.0034,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
@@ -8587,14 +8570,14 @@
         },
         {
           "name": "sha256_of_resume_p95_ms",
-          "value": 0.0024,
+          "value": 0.0025,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "strip_injections_clean_p50_ms",
-          "value": 0.0947,
+          "value": 0.0895,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8602,14 +8585,14 @@
         },
         {
           "name": "strip_injections_clean_p95_ms",
-          "value": 0.096,
+          "value": 0.2517,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "strip_injections_hostile_p50_ms",
-          "value": 0.1175,
+          "value": 0.1111,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8617,28 +8600,28 @@
         },
         {
           "name": "strip_injections_hostile_p95_ms",
-          "value": 0.1231,
+          "value": 0.1605,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "sanitize_resume_p50_ms",
-          "value": 0.1195,
+          "value": 0.1228,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "sanitize_resume_p95_ms",
-          "value": 0.1217,
+          "value": 0.2327,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "check_answer_tier1_p50_ms",
-          "value": 0.0555,
+          "value": 0.0569,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8646,14 +8629,14 @@
         },
         {
           "name": "check_answer_tier1_p95_ms",
-          "value": 0.0568,
+          "value": 0.0864,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "compute_integrity_score_0_events_p50_ms",
-          "value": 0.001,
+          "value": 0.0009,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8668,7 +8651,7 @@
         },
         {
           "name": "compute_integrity_score_10_events_p50_ms",
-          "value": 0.0054,
+          "value": 0.0049,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8676,14 +8659,14 @@
         },
         {
           "name": "compute_integrity_score_10_events_p95_ms",
-          "value": 0.0057,
+          "value": 0.0052,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "compute_integrity_score_50_events_p50_ms",
-          "value": 0.019,
+          "value": 0.0185,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8691,14 +8674,14 @@
         },
         {
           "name": "compute_integrity_score_50_events_p95_ms",
-          "value": 0.0193,
+          "value": 0.0192,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "compute_integrity_score_200_events_p50_ms",
-          "value": 0.064,
+          "value": 0.0771,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8706,14 +8689,14 @@
         },
         {
           "name": "compute_integrity_score_200_events_p95_ms",
-          "value": 0.1489,
+          "value": 0.1254,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "rank_10_candidates_p50_ms",
-          "value": 0.0374,
+          "value": 0.0408,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8721,14 +8704,14 @@
         },
         {
           "name": "rank_10_candidates_p95_ms",
-          "value": 0.0436,
+          "value": 0.0646,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "rank_100_candidates_p50_ms",
-          "value": 0.3717,
+          "value": 0.4336,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8736,7 +8719,7 @@
         },
         {
           "name": "rank_100_candidates_p95_ms",
-          "value": 0.4407,
+          "value": 1.0517,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
@@ -8758,7 +8741,7 @@
         },
         {
           "name": "hash_password_scrypt_p50_ms",
-          "value": 122.0921,
+          "value": 122.4377,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8766,14 +8749,14 @@
         },
         {
           "name": "hash_password_scrypt_p95_ms",
-          "value": 123.4648,
+          "value": 127.8448,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "verify_password_scrypt_p50_ms",
-          "value": 121.7489,
+          "value": 122.2289,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8781,7 +8764,7 @@
         },
         {
           "name": "verify_password_scrypt_p95_ms",
-          "value": 123.1874,
+          "value": 125.0296,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
@@ -8796,14 +8779,14 @@
         },
         {
           "name": "hash_session_token_sha256_p95_ms",
-          "value": 0.0016,
+          "value": 0.0018,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "register_candidate_p50_ms",
-          "value": 122.4748,
+          "value": 122.6846,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8811,14 +8794,14 @@
         },
         {
           "name": "register_candidate_p95_ms",
-          "value": 123.7498,
+          "value": 124.064,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "apply_no_model_p50_ms",
-          "value": 0.427,
+          "value": 0.4566,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8826,14 +8809,14 @@
         },
         {
           "name": "apply_no_model_p95_ms",
-          "value": 0.5518,
+          "value": 0.5535,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "screen_fake_model_p50_ms",
-          "value": 0.4813,
+          "value": 0.5014,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8841,14 +8824,14 @@
         },
         {
           "name": "screen_fake_model_p95_ms",
-          "value": 0.6399,
+          "value": 0.5968,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "fused_for_role_query_p50_ms",
-          "value": 0.0595,
+          "value": 0.0617,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8856,14 +8839,14 @@
         },
         {
           "name": "fused_for_role_query_p95_ms",
-          "value": 0.1022,
+          "value": 0.0638,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
         },
         {
           "name": "ranked_for_role_query_p50_ms",
-          "value": 0.1712,
+          "value": 0.1711,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency",
@@ -8871,7 +8854,7 @@
         },
         {
           "name": "ranked_for_role_query_p95_ms",
-          "value": 0.1814,
+          "value": 0.1751,
           "unit": "ms",
           "kind": "measured",
           "source": "metrics.m6_latency"
@@ -8881,7 +8864,7 @@
           "value": "register_candidate",
           "kind": "derived",
           "source": "metrics.m6_latency",
-          "note": "122.47 ms at p50. Everything in the scoring path is sub-millisecond; what costs time is I/O and the KDF. The design consequence is that the pipeline's latency is entirely the model's, which is exactly why the model figure below is not guessed."
+          "note": "122.68 ms at p50. Everything in the scoring path is sub-millisecond; what costs time is I/O and the KDF. The design consequence is that the pipeline's latency is entirely the model's, which is exactly why the model figure below is not guessed."
         },
         {
           "name": "offline_stages_are_deterministic",
@@ -8920,161 +8903,161 @@
           {
             "stage": "pdf_text_extraction",
             "n": 10,
-            "p50_ms": 51.639,
-            "p95_ms": 52.6807,
-            "mean_ms": 51.7575,
-            "min_ms": 51.0148,
-            "max_ms": 52.7814,
+            "p50_ms": 51.9976,
+            "p95_ms": 60.0962,
+            "mean_ms": 53.5402,
+            "min_ms": 50.5873,
+            "max_ms": 60.643,
             "note": "pymupdf on a real 812 KB, 9-page PDF (this paper's own draft \u2014 the only real PDF checked into the repo)"
           },
           {
             "stage": "clean_text",
             "n": 40,
-            "p50_ms": 0.0427,
-            "p95_ms": 0.0432,
-            "mean_ms": 0.0428,
-            "min_ms": 0.0424,
-            "max_ms": 0.0435,
+            "p50_ms": 0.0437,
+            "p95_ms": 0.0856,
+            "mean_ms": 0.0842,
+            "min_ms": 0.0425,
+            "max_ms": 1.476,
             "note": "546 chars"
           },
           {
             "stage": "ats_score",
             "n": 40,
-            "p50_ms": 0.0751,
-            "p95_ms": 0.0762,
-            "mean_ms": 0.0756,
-            "min_ms": 0.0742,
-            "max_ms": 0.0928,
+            "p50_ms": 0.0749,
+            "p95_ms": 0.0786,
+            "mean_ms": 0.0754,
+            "min_ms": 0.0735,
+            "max_ms": 0.0811,
             "note": "5 requirements, 546 chars"
           },
           {
             "stage": "ats_score_long_resume",
             "n": 40,
-            "p50_ms": 0.2784,
-            "p95_ms": 0.3617,
-            "mean_ms": 0.3094,
-            "min_ms": 0.2737,
-            "max_ms": 1.1902,
+            "p50_ms": 0.2826,
+            "p95_ms": 0.4003,
+            "mean_ms": 0.3429,
+            "min_ms": 0.273,
+            "max_ms": 2.0345,
             "note": "3276 chars \u2014 the pre-filter scales linearly"
           },
           {
             "stage": "word_count",
             "n": 40,
-            "p50_ms": 0.0034,
-            "p95_ms": 0.0048,
-            "mean_ms": 0.0038,
-            "min_ms": 0.003,
-            "max_ms": 0.0049,
+            "p50_ms": 0.003,
+            "p95_ms": 0.0034,
+            "mean_ms": 0.0031,
+            "min_ms": 0.0028,
+            "max_ms": 0.0037,
             "note": ""
           },
           {
             "stage": "sha256_of_resume",
             "n": 40,
             "p50_ms": 0.0022,
-            "p95_ms": 0.0024,
-            "mean_ms": 0.0022,
+            "p95_ms": 0.0025,
+            "mean_ms": 0.0023,
             "min_ms": 0.0021,
-            "max_ms": 0.0026,
+            "max_ms": 0.0068,
             "note": "dedup / tamper-evidence hash stored on the application row"
           },
           {
             "stage": "strip_injections_clean",
             "n": 40,
-            "p50_ms": 0.0947,
-            "p95_ms": 0.096,
-            "mean_ms": 0.095,
-            "min_ms": 0.0932,
-            "max_ms": 0.1026,
+            "p50_ms": 0.0895,
+            "p95_ms": 0.2517,
+            "mean_ms": 0.1441,
+            "min_ms": 0.0826,
+            "max_ms": 1.0854,
             "note": "5 regex families over a clean resume"
           },
           {
             "stage": "strip_injections_hostile",
             "n": 40,
-            "p50_ms": 0.1175,
-            "p95_ms": 0.1231,
-            "mean_ms": 0.1197,
-            "min_ms": 0.1156,
-            "max_ms": 0.1901,
+            "p50_ms": 0.1111,
+            "p95_ms": 0.1605,
+            "mean_ms": 0.1258,
+            "min_ms": 0.1041,
+            "max_ms": 0.3335,
             "note": "same resume with two injection payloads appended"
           },
           {
             "stage": "sanitize_resume",
             "n": 40,
-            "p50_ms": 0.1195,
-            "p95_ms": 0.1217,
-            "mean_ms": 0.1201,
-            "min_ms": 0.1177,
-            "max_ms": 0.1377,
+            "p50_ms": 0.1228,
+            "p95_ms": 0.2327,
+            "mean_ms": 0.1715,
+            "min_ms": 0.1058,
+            "max_ms": 1.6189,
             "note": ""
           },
           {
             "stage": "check_answer_tier1",
             "n": 40,
-            "p50_ms": 0.0555,
-            "p95_ms": 0.0568,
-            "mean_ms": 0.0555,
-            "min_ms": 0.0538,
-            "max_ms": 0.0577,
+            "p50_ms": 0.0569,
+            "p95_ms": 0.0864,
+            "mean_ms": 0.076,
+            "min_ms": 0.0473,
+            "max_ms": 0.7904,
             "note": "tier 1 only. Tier 2 adds one model round trip and is the only path on which a candidate's answer leaves the process."
           },
           {
             "stage": "compute_integrity_score_0_events",
             "n": 40,
-            "p50_ms": 0.001,
+            "p50_ms": 0.0009,
             "p95_ms": 0.0011,
-            "mean_ms": 0.001,
-            "min_ms": 0.0009,
-            "max_ms": 0.0012,
+            "mean_ms": 0.0009,
+            "min_ms": 0.0008,
+            "max_ms": 0.0013,
             "note": "0 proctoring events"
           },
           {
             "stage": "compute_integrity_score_10_events",
             "n": 40,
-            "p50_ms": 0.0054,
-            "p95_ms": 0.0057,
-            "mean_ms": 0.0054,
-            "min_ms": 0.0051,
-            "max_ms": 0.0058,
+            "p50_ms": 0.0049,
+            "p95_ms": 0.0052,
+            "mean_ms": 0.005,
+            "min_ms": 0.0048,
+            "max_ms": 0.0053,
             "note": "10 proctoring events"
           },
           {
             "stage": "compute_integrity_score_50_events",
             "n": 40,
-            "p50_ms": 0.019,
-            "p95_ms": 0.0193,
-            "mean_ms": 0.019,
-            "min_ms": 0.0186,
-            "max_ms": 0.0193,
+            "p50_ms": 0.0185,
+            "p95_ms": 0.0192,
+            "mean_ms": 0.0186,
+            "min_ms": 0.0179,
+            "max_ms": 0.023,
             "note": "50 proctoring events"
           },
           {
             "stage": "compute_integrity_score_200_events",
             "n": 40,
-            "p50_ms": 0.064,
-            "p95_ms": 0.1489,
-            "mean_ms": 0.0813,
-            "min_ms": 0.0635,
-            "max_ms": 0.3279,
+            "p50_ms": 0.0771,
+            "p95_ms": 0.1254,
+            "mean_ms": 0.0847,
+            "min_ms": 0.0689,
+            "max_ms": 0.1495,
             "note": "200 proctoring events"
           },
           {
             "stage": "rank_10_candidates",
             "n": 40,
-            "p50_ms": 0.0374,
-            "p95_ms": 0.0436,
-            "mean_ms": 0.0385,
-            "min_ms": 0.0368,
-            "max_ms": 0.0442,
+            "p50_ms": 0.0408,
+            "p95_ms": 0.0646,
+            "mean_ms": 0.0453,
+            "min_ms": 0.0373,
+            "max_ms": 0.1366,
             "note": "fused S_final over 10 applications"
           },
           {
             "stage": "rank_100_candidates",
             "n": 40,
-            "p50_ms": 0.3717,
-            "p95_ms": 0.4407,
-            "mean_ms": 0.3962,
-            "min_ms": 0.3705,
-            "max_ms": 0.8822,
+            "p50_ms": 0.4336,
+            "p95_ms": 1.0517,
+            "mean_ms": 0.5783,
+            "min_ms": 0.3779,
+            "max_ms": 2.5823,
             "note": "fused S_final over 100 applications"
           },
           {
@@ -9090,81 +9073,81 @@
           {
             "stage": "hash_password_scrypt",
             "n": 8,
-            "p50_ms": 122.0921,
-            "p95_ms": 123.4648,
-            "mean_ms": 122.2094,
-            "min_ms": 120.8821,
-            "max_ms": 123.5137,
+            "p50_ms": 122.4377,
+            "p95_ms": 127.8448,
+            "mean_ms": 123.3133,
+            "min_ms": 121.515,
+            "max_ms": 130.1137,
             "note": "scrypt n=2^15 r=8 p=1 dklen=32 \u2014 a deliberate cost. At this work factor an offline attacker is bounded by the same arithmetic the login is."
           },
           {
             "stage": "verify_password_scrypt",
             "n": 8,
-            "p50_ms": 121.7489,
-            "p95_ms": 123.1874,
-            "mean_ms": 121.9303,
-            "min_ms": 120.8475,
-            "max_ms": 123.6894,
+            "p50_ms": 122.2289,
+            "p95_ms": 125.0296,
+            "mean_ms": 122.6331,
+            "min_ms": 121.0949,
+            "max_ms": 125.1645,
             "note": "constant-time comparison via hmac.compare_digest"
           },
           {
             "stage": "hash_session_token_sha256",
             "n": 200,
             "p50_ms": 0.0012,
-            "p95_ms": 0.0016,
+            "p95_ms": 0.0018,
             "mean_ms": 0.0013,
             "min_ms": 0.0011,
-            "max_ms": 0.0027,
+            "max_ms": 0.0028,
             "note": "runs on every authenticated request; sha256 rather than scrypt because the token already has 256 bits of entropy and needs no stretching"
           },
           {
             "stage": "register_candidate",
             "n": 6,
-            "p50_ms": 122.4748,
-            "p95_ms": 123.7498,
-            "mean_ms": 122.7218,
-            "min_ms": 121.6112,
-            "max_ms": 123.7806,
+            "p50_ms": 122.6846,
+            "p95_ms": 124.064,
+            "mean_ms": 122.8546,
+            "min_ms": 121.983,
+            "max_ms": 124.2665,
             "note": "dominated by the scrypt KDF above, plus one INSERT"
           },
           {
             "stage": "apply_no_model",
             "n": 15,
-            "p50_ms": 0.427,
-            "p95_ms": 0.5518,
-            "mean_ms": 0.4635,
-            "min_ms": 0.4158,
-            "max_ms": 0.5596,
+            "p50_ms": 0.4566,
+            "p95_ms": 0.5535,
+            "mean_ms": 0.4707,
+            "min_ms": 0.4231,
+            "max_ms": 0.5782,
             "note": "sanitise + keyword score + INSERT. Runs with no network call at all, which is why a throttled provider can never lose a candidate's submission."
           },
           {
             "stage": "screen_fake_model",
             "n": 15,
-            "p50_ms": 0.4813,
-            "p95_ms": 0.6399,
-            "mean_ms": 0.5188,
-            "min_ms": 0.4718,
-            "max_ms": 0.7357,
+            "p50_ms": 0.5014,
+            "p95_ms": 0.5968,
+            "mean_ms": 0.5189,
+            "min_ms": 0.4888,
+            "max_ms": 0.6384,
             "note": "prompt construction + JSON parse + rubric normalisation + UPDATE, with the provider stubbed. Add the model's own latency for a real figure."
           },
           {
             "stage": "fused_for_role_query",
             "n": 15,
-            "p50_ms": 0.0595,
-            "p95_ms": 0.1022,
-            "mean_ms": 0.0688,
-            "min_ms": 0.0589,
-            "max_ms": 0.194,
+            "p50_ms": 0.0617,
+            "p95_ms": 0.0638,
+            "mean_ms": 0.0621,
+            "min_ms": 0.0613,
+            "max_ms": 0.0651,
             "note": "the LEFT JOIN plus S_final over every application on the role"
           },
           {
             "stage": "ranked_for_role_query",
             "n": 15,
-            "p50_ms": 0.1712,
-            "p95_ms": 0.1814,
-            "mean_ms": 0.1727,
-            "min_ms": 0.1684,
-            "max_ms": 0.192,
+            "p50_ms": 0.1711,
+            "p95_ms": 0.1751,
+            "mean_ms": 0.1718,
+            "min_ms": 0.1698,
+            "max_ms": 0.1759,
             "note": "the shipped resume-only ORDER BY, for comparison"
           }
         ],

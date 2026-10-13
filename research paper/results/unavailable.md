@@ -59,6 +59,13 @@ section in draft form.
 - Relevant code: `services.proctor_service.purge_snapshots, services.recording_service, services.auth_service.purge_expired_sessions`
 - Needs: Three purge functions exist and are correct, but nothing calls them on a schedule: deletion is manual. A defensible retention claim needs a documented period and a job that enforces it. Until then the honest sentence is 'deletion primitives exist; retention is the operator's responsibility'.
 
+### m9_provider_contract — Provider contract
+
+**`shipped_schemas_accepted_live`**
+
+- Relevant code: `metrics.m9_provider_contract._run_live`
+- Needs: A live run that reaches the model. All 2 shipped-schema probes failed in transport against gemini-3.8-flash (HTTP 503), so this run cannot say whether the schema is accepted. The two control probes did reach the API and were rejected exactly as expected, so the sanitiser's behaviour is unchanged as far as this run can tell. Re-run when the provider is healthy. Measured live on 2026-10-13T12:00:08+00:00; replayed from live_provider_contract.json because this run had no live provider enabled.
+
 ### m11_live_screening — Real-model screening — is the screener fooled the way the cohort assumes?
 
 **`real_model_is_fooled_by_resume_inflation`**

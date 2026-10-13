@@ -273,6 +273,35 @@ def _post_raw(
     }
 
 
+def _is_transport_failure(row: dict) -> bool:
+    """Did this probe fail to reach the model, rather than being refused by it?
+
+    A schema rejection is the API reading the request and saying no: HTTP 4xx.
+    Anything else — 5xx, a read timeout, a connection error, no status at all —
+    is the transport, and says nothing about the schema. Keeping the two apart
+    is what stops a provider outage from being published as a contract
+    regression.
+    """
+    status = row.get("http_status")
+    if status is None:
+        return True  # timeout or connection error: never got an answer
+    return int(status) >= 500
+
+
+def _transport_reasons(rows: list[dict]) -> str:
+    """One short phrase naming why each probe never reached the model."""
+    seen: list[str] = []
+    for row in rows:
+        status = row.get("http_status")
+        if status is None:
+            reason = "timeout/connection error"
+        else:
+            reason = f"HTTP {status}"
+        if reason not in seen:
+            seen.append(reason)
+    return ", ".join(seen) or "unknown"
+
+
 def _run_live(section: Section) -> None:
     from llm import build_provider
     from llm.base import LLMError, extract_json
@@ -437,58 +466,139 @@ def _report_live(
         (r for r in rows if r["schema"].startswith("unsanitised")), None
     )
 
-    section.add(
-        "shipped_schemas_accepted_live",
-        bool(shipped) and all(r["accepted"] and r["parsed_as_object"] for r in shipped),
-        kind="measured",
-        source="metrics.m9_provider_contract._run_live",
-        note=(
-            f"{sum(1 for r in shipped if r['accepted'])} of {len(shipped)} accepted "
-            f"against {model}; every required field present in the reply." + when
-        ),
-    )
-    if broken is not None:
-        section.add(
-            "pre_fix_schema_rejected_live",
-            not broken["accepted"],
-            kind="measured",
-            source="metrics.m9_provider_contract._run_live",
-            note=(
-                (
-                    f"HTTP {broken['http_status']}. The API returns exactly the "
-                    "error llm/gemini.py's docstring quotes — "
-                    "'response_schema.required[0]: property is not defined' — so "
-                    "the properties branch of sanitize_schema is load-bearing, "
-                    "measured rather than recalled."
-                    if not broken["accepted"]
-                    else "ACCEPTED — the API no longer rejects the pre-fix shape, "
-                    "so the defect narrative in §III must be rewritten: the 400 "
-                    "came from somewhere else"
-                )
-                + when
-            ),
-        )
-    if unsanitised is not None:
-        section.add(
-            "unsanitised_schema_rejected_live",
-            not unsanitised["accepted"],
-            kind="measured",
-            source="metrics.m9_provider_contract._run_live",
-            note=(
-                (
-                    f"HTTP {unsanitised['http_status']} for a schema carrying "
-                    "additionalProperties: 'Unknown name'. The keyword allow-list "
-                    "is a real adaptation to the provider's dialect, not caution."
-                    if not unsanitised["accepted"]
-                    else "ACCEPTED — Gemini now tolerates this keyword; the "
-                    "allow-list is more conservative than the API requires, which "
-                    "is safe but should not be described as necessary"
-                )
-                + when
-            ),
-        )
+    # A probe that never reached the model has not told us anything about the
+    # schema contract, and must not be scored as though it had. On 2026-10-13
+    # two "expected accepted" probes came back HTTP 503 ("this model is
+    # currently experiencing high demand") and a read timeout, which made
+    # shipped_schemas_accepted_live report False — a provider outage presenting
+    # as a contract regression. That reading would have gone into the paper as
+    # evidence the sanitiser had stopped working, when the two control probes in
+    # the same run returned exactly the 400s they are supposed to.
+    #
+    # Rejection means the API looked at the request and refused it: HTTP 4xx.
+    # 5xx, a timeout, or no status at all is the transport failing, which is
+    # unavailable rather than False.
+    inconclusive = [r for r in shipped if _is_transport_failure(r)]
+    conclusive = [r for r in shipped if not _is_transport_failure(r)]
 
-    latencies = [r["seconds"] for r in shipped if r["seconds"] is not None]
+    if shipped and not conclusive:
+        section.add(
+            "shipped_schemas_accepted_live",
+            None,
+            kind="unavailable",
+            source="metrics.m9_provider_contract._run_live",
+            needs=(
+                f"A live run that reaches the model. All {len(shipped)} "
+                f"shipped-schema probes failed in transport against {model} "
+                f"({_transport_reasons(inconclusive)}), so this run cannot say "
+                "whether the schema is accepted. The two control probes did "
+                "reach the API and were rejected exactly as expected, so the "
+                "sanitiser's behaviour is unchanged as far as this run can "
+                "tell. Re-run when the provider is healthy." + when
+            ),
+        )
+    else:
+        section.add(
+            "shipped_schemas_accepted_live",
+            bool(conclusive)
+            and all(r["accepted"] and r["parsed_as_object"] for r in conclusive),
+            kind="measured",
+            source="metrics.m9_provider_contract._run_live",
+            note=(
+                f"{sum(1 for r in conclusive if r['accepted'])} of "
+                f"{len(conclusive)} accepted against {model}; every required "
+                "field present in the reply."
+                + (
+                    f" {len(inconclusive)} further probe(s) failed in transport "
+                    f"({_transport_reasons(inconclusive)}) and are excluded "
+                    "rather than counted as rejections."
+                    if inconclusive
+                    else ""
+                )
+                + when
+            ),
+        )
+    # Both controls need the same guard as the shipped probes, and for a worse
+    # reason: a 503 here leaves ``accepted`` False, which would read as "the API
+    # correctly rejected the broken schema" when the API never saw it. That is
+    # false confidence in the sanitiser rather than a false alarm about it.
+    if broken is not None:
+        if _is_transport_failure(broken):
+            section.add(
+                "pre_fix_schema_rejected_live",
+                None,
+                kind="unavailable",
+                source="metrics.m9_provider_contract._run_live",
+                needs=(
+                    "A live run that reaches the model. This probe failed in "
+                    f"transport ({_transport_reasons([broken])}), so it cannot "
+                    "show that the API rejects the pre-fix schema — and a "
+                    "transport failure must not be read as a rejection, which "
+                    "would credit the sanitiser for a refusal that never "
+                    "happened." + when
+                ),
+            )
+        else:
+            section.add(
+                "pre_fix_schema_rejected_live",
+                not broken["accepted"],
+                kind="measured",
+                source="metrics.m9_provider_contract._run_live",
+                note=(
+                    (
+                        f"HTTP {broken['http_status']}. The API returns exactly the "
+                        "error llm/gemini.py's docstring quotes — "
+                        "'response_schema.required[0]: property is not defined' — so "
+                        "the properties branch of sanitize_schema is load-bearing, "
+                        "measured rather than recalled."
+                        if not broken["accepted"]
+                        else "ACCEPTED — the API no longer rejects the pre-fix shape, "
+                        "so the defect narrative in §III must be rewritten: the 400 "
+                        "came from somewhere else"
+                    )
+                    + when
+                ),
+            )
+    if unsanitised is not None:
+        if _is_transport_failure(unsanitised):
+            section.add(
+                "unsanitised_schema_rejected_live",
+                None,
+                kind="unavailable",
+                source="metrics.m9_provider_contract._run_live",
+                needs=(
+                    "A live run that reaches the model. This probe failed in "
+                    f"transport ({_transport_reasons([unsanitised])}), so it "
+                    "cannot show that the keyword allow-list is necessary." + when
+                ),
+            )
+        else:
+            section.add(
+                "unsanitised_schema_rejected_live",
+                not unsanitised["accepted"],
+                kind="measured",
+                source="metrics.m9_provider_contract._run_live",
+                note=(
+                    (
+                        f"HTTP {unsanitised['http_status']} for a schema carrying "
+                        "additionalProperties: 'Unknown name'. The keyword allow-list "
+                        "is a real adaptation to the provider's dialect, not caution."
+                        if not unsanitised["accepted"]
+                        else "ACCEPTED — Gemini now tolerates this keyword; the "
+                        "allow-list is more conservative than the API requires, which "
+                        "is safe but should not be described as necessary"
+                    )
+                    + when
+                ),
+            )
+
+    # Latency likewise: a 503 returns in milliseconds and would drag the mean
+    # down while measuring nothing.
+    latencies = [
+        r["seconds"]
+        for r in shipped
+        if r["seconds"] is not None and not _is_transport_failure(r)
+    ]
     if latencies:
         section.add(
             "hosted_api_round_trip_seconds",
